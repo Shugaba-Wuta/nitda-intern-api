@@ -16,6 +16,8 @@ const expressAsyncErrors = require("express-async-errors")
 //Local imports
 import { notFound as notFoundMiddleware } from "../middleware/not-found"
 import { errorHandlerMiddleware } from '../middleware/error-handler'
+import { connectDB } from '../db/connect'
+import { assignSession } from '../middleware/session'
 
 const app = express()
 
@@ -24,6 +26,7 @@ const app = express()
 app.use(helmet());
 app.use(cors());
 app.use(xss());
+app.use(assignSession)
 app.use(morgan("tiny"))
 app.use(cors())
 app.use(express.json());
@@ -41,24 +44,20 @@ app.use(errorHandlerMiddleware)
 
 
 const PORT = process.env.PORT || 5000
+const ENV = process.env.ENV
+const DB_URL = (ENV === "LIVE") ? process.env.DB_LIVE_URL : process.env.DEV_DB_URL
+
 const startApp = async () => {
-    console.log(`\nStarting app on port: ${PORT} .........................................`)
-    app.listen(PORT, async () => {
-        try {
-            console.log("App is running: Press ctrl+x to stop app")
-
-        } catch (err) {
-            console.error("App could not start: \n", err)
-        }
-
-    })
+    try {
+        await connectDB(DB_URL)
+        app.listen(PORT, async () => {
+            console.log(`Server is running on Port: ${PORT} ......................................`)
+        })
+    } catch (error) {
+        console.log(error)
+    }
 
 }
-
-
-
-
-
 
 
 
