@@ -1,13 +1,13 @@
 import mongoose from "mongoose"
 import { userBaseSchema } from "./userBaseSchema"
 import { GENDERS, QUALIFICATION, INTERNSHIP_STATUS } from "../config/data"
+import { IInternBase } from "models"
 
 
-const internBaseSchema = new mongoose.Schema({
+const internBaseSchema = new mongoose.Schema<IInternBase>({
     highestQualification: { type: String, required: [true, "highestQualification is required"], enum: { values: QUALIFICATION, message: `highestQualification must be any of: ${QUALIFICATION}` } },
     gender: { type: String, required: [true, "gender is required"], enum: { values: GENDERS, message: `gender must be any of: ${GENDERS}` } },
     phoneNumber: { type: String, required: [true, "phoneNumber is required"] },
-    department: { type: String, required: [true, 'department is required'] },
     assignedOffice: String,
     status: { type: String, enum: { values: INTERNSHIP_STATUS, message: `status must be any of: ${INTERNSHIP_STATUS}` } },
     expectedEndDate: { type: Date, required: [true, "expectedEndDate is required"] },

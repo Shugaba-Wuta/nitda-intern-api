@@ -1,8 +1,21 @@
-import mongoose from "mongoose"
+import { Schema, model, Model } from "mongoose"
 import { userBaseSchema } from "./userBaseSchema"
+import { IStaff, IUserBaseMethods, } from "models"
 
-const staffSchema = new mongoose.Schema({
+
+type UserModel = Model<IStaff, {}, IUserBaseMethods>
+
+const staffSchema = new Schema<IStaff, UserModel, IUserBaseMethods>({
     jobTitle: { type: String, required: [true, "jobTitle is required"] },
-    department: { type: String, required: [true, "department is required"] }
+
+
 })
-export default mongoose.model("Staff", staffSchema.add(userBaseSchema))
+
+
+
+export default model("Staff", staffSchema.add(userBaseSchema))
+
+
+
+
+

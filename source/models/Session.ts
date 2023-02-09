@@ -1,14 +1,14 @@
+import { ISession } from "models"
 import mongoose from "mongoose"
 
 import { USER_ROLES } from "../config/data"
 
 
 
-const sessionSchema = new mongoose.Schema({
-    intern: { type: mongoose.Types.ObjectId, refPath: "internSchema" },
-    internSchema: { type: String, required: [true, "internSchema is required"], enum: { values: USER_ROLES, message: `internSchema must be any of: ${USER_ROLES}` } },
-    ipV4: { type: String, trim: true, required: [true, "ipV4 is required"] },
-    ipV6: { type: String, trim: true },
+const sessionSchema = new mongoose.Schema<ISession>({
+    user: { type: mongoose.Types.ObjectId, refPath: "userSchema", required: [true, "Session: user is required"] },
+    userSchema: { type: String, required: [true, "userSchema is required"], enum: { values: USER_ROLES, message: `userSchema must be any of: ${USER_ROLES}` } },
+    ip: { type: [String], trim: true, required: [true, "ipV4 is required"] },
     userAgent: { type: String, trim: true, required: [true, "userAgent is required"] },
 
 }, {

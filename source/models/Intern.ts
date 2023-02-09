@@ -1,6 +1,10 @@
-import mongoose from "mongoose"
+import { IIntern, IUserBaseMethods } from "models"
+import { model, Model, Schema } from "mongoose"
 import internBase from "./internBase"
 
-const internSchema = new mongoose.Schema({
+type UserModel = Model<IIntern, {}, IUserBaseMethods>
+
+
+const userSchema = new Schema<IIntern, UserModel, IUserBaseMethods>({
 })
-export default mongoose.model("Intern", internSchema.add(internBase))
+export default model("Intern", userSchema.add(internBase))

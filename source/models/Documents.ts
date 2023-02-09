@@ -7,8 +7,8 @@ const documentSchema = new mongoose.Schema({
     link: { type: String, required: [true, "document link is required"] },
     deleted: { type: Boolean, default: false },
     deletedOn: { type: Date },
-    internSchema: { type: String, required: [true, "internSchema is required"], enum: { values: USER_ROLES, message: `internSchema must be any of: ${USER_ROLES}` } },
-    intern: { type: mongoose.Types.ObjectId, refPath: "internSchema" },
+    userSchema: { type: String, required: [true, "userSchema is required"], enum: { values: USER_ROLES, message: `userSchema must be any of: ${USER_ROLES}` } },
+    user: { type: mongoose.Types.ObjectId, refPath: "userSchema" },
 
 
 }, {

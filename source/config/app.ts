@@ -17,16 +17,15 @@ const expressAsyncErrors = require("express-async-errors")
 import { notFound as notFoundMiddleware } from "../middleware/not-found"
 import { errorHandlerMiddleware } from '../middleware/error-handler'
 import { connectDB } from '../db/connect'
-import { assignSession } from '../middleware/session'
 
 const app = express()
+app.set("trust-proxy", 1)
 
 //Top-level middlewares
 
 app.use(helmet());
 app.use(cors());
 app.use(xss());
-app.use(assignSession)
 app.use(morgan("tiny"))
 app.use(cors())
 app.use(express.json());
