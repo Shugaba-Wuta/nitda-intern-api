@@ -4,6 +4,7 @@ import { IRequest } from "request";
 import { BadRequestError, NotFoundError } from "../errors";
 import { StatusCodes } from "http-status-codes";
 import { createJWT } from "../utils/jwt";
+import { cookieDuration } from "../config/data";
 
 
 
@@ -24,35 +25,34 @@ export const login = async (req: IRequest, res: Response) => {
     var user
     if (staff && staff.comparePassword(password)) {
         var { _id: userID, role, permissions, } = staff
-        user = staff
+        // user = staff
     } else if (nysc && nysc.comparePassword(password)) {
         var { _id: userID, role, permissions, } = nysc
-        user = nysc
+        // user = nysc
     } else if (siwes && siwes.comparePassword(password)) {
         var { _id: userID, role, permissions, } = siwes
-        user = siwes
+        // user = siwes
     } else if (intern && intern.comparePassword(password)) {
         var { _id: userID, role, permissions, } = intern
-        user = intern
+        // user = intern
     } else {
         throw new NotFoundError("invalid email and password")
     }
 
     //Create new session
     await new Session({ user: userID, ip: req.ips || req.ip }).save()
-    const payload = { userID, role, permissions, email }
-    req.user = payload
+    const payload = JSON.stringify({ userID, role, permissions, email })
 
     //setup cookies and tokens
-    const cookie = createJWT(JSON.stringify(payload), "cookie")
-    const accessToken = createJWT(JSON.stringify(payload), "token")
+    const cookie = createJWT(payload, "cookie")
+    const accessToken = createJWT(payload, "token")
 
-    req.cookies("user", cookie, )
-
-
+    req.cookies("user", cookie, { maxAge: cookieDuration, signed: true, httpOnly: true, secured: true })
 
 
-    res.status(StatusCodes.OK).json({ message: "Login successful", result: user, success: true })
+
+
+    res.status(StatusCodes.OK).json({ message: "Login successful", result: { accessToken }, success: true })
 
 
 }
