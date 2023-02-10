@@ -3,8 +3,7 @@ import { IRequest } from "request";
 import { BadRequestError, UnauthenticatedError } from "../errors";
 import { decodeToken } from "../utils/jwt";
 
-
-export const attachUserToRequest = async (req: IRequest, res: Response, next: NextFunction) => {
+export const retrieveAndValidateToken = async (req: IRequest, res: Response, refresh: boolean = false) => {
     const authHeader = req.headers.authorization
     var token
     if (authHeader) {
@@ -18,7 +17,12 @@ export const attachUserToRequest = async (req: IRequest, res: Response, next: Ne
         throw new UnauthenticatedError("Unauthenticated: Login required")
     }
     const decodedToken = await decodeToken(token)
-    req.user = decodedToken
+    return decodedToken
+}
+export const attachUserToRequest = async (req: IRequest, res: Response, next: NextFunction) => {
+    const user = await retrieveAndValidateToken(req, res)
+    req.user = user
+
     return next()
 }
 

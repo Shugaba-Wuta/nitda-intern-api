@@ -18,6 +18,7 @@ import { notFound as notFoundMiddleware } from "../middleware/not-found"
 import { errorHandlerMiddleware } from '../middleware/error-handler'
 import { connectDB } from '../db/connect'
 import { attachUserToRequest } from '../middleware/auth'
+import authRouter from "../routers/auth-route"
 
 const app = express()
 app.set("trust-proxy", 1)
@@ -33,7 +34,10 @@ app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET))
 
 app.use(morgan("tiny"))
-app.use(attachUserToRequest)
+//Unauthenticated paths
+app.use("/auth", authRouter)
+
+
 
 
 
@@ -41,6 +45,7 @@ app.use(attachUserToRequest)
 
 //Low-level middlewares
 app.use(notFoundMiddleware)
+app.use(attachUserToRequest)
 app.use(errorHandlerMiddleware)
 
 

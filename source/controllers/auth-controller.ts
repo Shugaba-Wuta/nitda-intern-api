@@ -1,10 +1,11 @@
-import { Response, NextFunction } from "express"
+import { Response } from "express"
 import { Session, Intern, Nysc, Siwes, Staff } from "../models";
 import { IRequest } from "request";
 import { BadRequestError, NotFoundError } from "../errors";
 import { StatusCodes } from "http-status-codes";
 import { createJWT } from "../utils/jwt";
 import { cookieDuration } from "../config/data";
+import { retrieveAndValidateToken } from "../middleware/auth"
 
 
 
@@ -22,19 +23,14 @@ export const login = async (req: IRequest, res: Response) => {
     staff = await Staff.findOne({ deleted: false, active: true, email })
     intern = await Intern.findOne({ deleted: false, active: true, email })
 
-    var user
     if (staff && staff.comparePassword(password)) {
         var { _id: userID, role, permissions, } = staff
-        // user = staff
     } else if (nysc && nysc.comparePassword(password)) {
         var { _id: userID, role, permissions, } = nysc
-        // user = nysc
     } else if (siwes && siwes.comparePassword(password)) {
         var { _id: userID, role, permissions, } = siwes
-        // user = siwes
     } else if (intern && intern.comparePassword(password)) {
         var { _id: userID, role, permissions, } = intern
-        // user = intern
     } else {
         throw new NotFoundError("invalid email and password")
     }
@@ -49,10 +45,18 @@ export const login = async (req: IRequest, res: Response) => {
 
     req.cookies("user", cookie, { maxAge: cookieDuration, signed: true, httpOnly: true, secured: true })
 
-
-
-
     res.status(StatusCodes.OK).json({ message: "Login successful", result: { accessToken }, success: true })
 
 
+}
+export const refreshToken = async (req: IRequest, res: Response) => {
+    const payload = await retrieveAndValidateToken(req, res)
+    const refreshToken = createJWT(payload, "refresh")
+    return res.status(StatusCodes.OK).json({ message: "refresh token", result: { refreshToken }, success: true })
+
+}
+
+export const logout = async (req: IRequest, res: Response) => {
+    res.clearCookie("user")
+    return res.status(StatusCodes.OK).json({ message: "logged out", result: null, success: true })
 }
