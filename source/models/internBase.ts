@@ -27,4 +27,16 @@ internBaseSchema.virtual("duration").get(function () {
     return diffInMilliSeconds
 })
 
+internBaseSchema.virtual("account", {
+    ref: "Account",
+    foreignField: "intern",
+    localField: "_id"
+})
+
+internBaseSchema.virtual("nextOfKin", {
+    ref: "NextOfKin",
+    foreignField: "intern",
+    localField: "_id"
+})
+
 export default internBaseSchema.add(userBaseSchema)

@@ -32,6 +32,7 @@ export const errorHandlerMiddleware = (err: any, req: Request, res: Response, ne
         customError.msg = `Unauthorized access to this route ${req.url}.`
         customError.statusCode = StatusCodes.FORBIDDEN
     }
+    console.log(err)
     return res.status(customError.statusCode).json({
         success: false,
         error: true,

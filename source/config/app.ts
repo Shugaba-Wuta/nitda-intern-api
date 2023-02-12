@@ -19,6 +19,7 @@ import { errorHandlerMiddleware } from '../middleware/error-handler'
 import { connectDB } from '../db/connect'
 import { attachUserToRequest } from '../middleware/auth'
 import authRouter from "../routers/auth-route"
+import userRouter from "../routers/user-route"
 
 const app = express()
 app.set("trust-proxy", 1)
@@ -43,9 +44,17 @@ app.use("/auth", authRouter)
 
 
 
+
 //Low-level middlewares
-app.use(notFoundMiddleware)
 app.use(attachUserToRequest)
+
+
+//Authenticated paths
+app.use("/users", userRouter)
+app.use(notFoundMiddleware)
+
+
+//errorHandler for throwing HTTP >= 400
 app.use(errorHandlerMiddleware)
 
 

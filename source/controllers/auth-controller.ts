@@ -4,7 +4,7 @@ import { IRequest } from "request";
 import { BadRequestError, NotFoundError } from "../errors";
 import { StatusCodes } from "http-status-codes";
 import { createJWT } from "../utils/jwt";
-import { cookieDuration } from "../config/data";
+import { COOKIE_DURATION } from "../config/data";
 import { retrieveAndValidateToken } from "../middleware/auth"
 
 
@@ -43,7 +43,7 @@ export const login = async (req: IRequest, res: Response) => {
     const cookie = createJWT(payload, "cookie")
     const accessToken = createJWT(payload, "token")
 
-    req.cookies("user", cookie, { maxAge: cookieDuration, signed: true, httpOnly: true, secured: true })
+    req.cookies("user", cookie, { maxAge: COOKIE_DURATION, signed: true, httpOnly: true, secured: true })
 
     res.status(StatusCodes.OK).json({ message: "Login successful", result: { accessToken }, success: true })
 

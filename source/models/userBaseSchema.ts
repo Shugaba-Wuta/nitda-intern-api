@@ -1,6 +1,6 @@
 import mongoose, { Model } from "mongoose"
 import bcrypt from "bcryptjs"
-import { IUserBase, IUserBaseMethods } from "models"
+import { IUserBase } from "models"
 
 
 const userBaseSchema = new mongoose.Schema<IUserBase>({
@@ -9,7 +9,7 @@ const userBaseSchema = new mongoose.Schema<IUserBase>({
     lastName: { type: String, required: [true, 'lastName is required'] },
     role: { type: String, required: [true, "role is required"] },
     permissions: { type: [String], required: [true, "permissions are required"] },
-    password: { type: String, required: [true, "password is required"] },
+    password: { type: String },
     email: { type: String, required: [true, "email is required"] },
     deleted: { type: Boolean, default: false },
     nitdaID: { type: String, required: [true, "nitdaID is required"] },
@@ -26,9 +26,16 @@ userBaseSchema.pre('save', async function () {
     this.email = this.email.trim().toLowerCase()
 
     //hash password
-    if (!this.isModified('password')) return;
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+    if (this.password && this.isModified('password')) {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+    }
+
+})
+userBaseSchema.pre("save", async function () {
+    if (this.isModified("deleted") && !this.deletedOn) {
+        this.deletedOn = new Date()
+    }
 
 })
 

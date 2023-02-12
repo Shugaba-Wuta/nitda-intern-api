@@ -1,5 +1,5 @@
 import mongoose from "mongoose"
-import { USER_ROLES } from "../config/data"
+import { USER_SCHEMA } from "../config/data"
 
 const documentSchema = new mongoose.Schema({
     title: { type: String, required: [true, " document title is required"] },
@@ -7,7 +7,7 @@ const documentSchema = new mongoose.Schema({
     link: { type: String, required: [true, "document link is required"] },
     deleted: { type: Boolean, default: false },
     deletedOn: { type: Date },
-    userSchema: { type: String, required: [true, "userSchema is required"], enum: { values: USER_ROLES, message: `userSchema must be any of: ${USER_ROLES}` } },
+    userSchema: { type: String, required: [true, "userSchema is required"], enum: { values: USER_SCHEMA, message: `userSchema must be any of: ${USER_SCHEMA}` } },
     user: { type: mongoose.Types.ObjectId, refPath: "userSchema" },
 
 

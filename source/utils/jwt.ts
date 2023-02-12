@@ -1,6 +1,6 @@
 import jwt, { decode } from "jsonwebtoken"
 import { token } from "morgan"
-import { cookieDuration, tokenDuration } from "../config/data"
+import { COOKIE_DURATION, TOKEN_DURATION } from "../config/data"
 import { BadRequestError } from "../errors"
 
 
@@ -11,11 +11,11 @@ export const createJWT = (payload: string, type: string = "token") => {
         throw new Error("variable: JWT_TOKEN_SECRET is missing")
     }
     if (type === "token") {
-        return jwt.sign(payload, JWT_TOKEN_SECRET, { expiresIn: tokenDuration })
+        return jwt.sign(payload, JWT_TOKEN_SECRET, { expiresIn: TOKEN_DURATION })
     } else if (type === "cookie") {
-        return jwt.sign(payload, JWT_TOKEN_SECRET, { expiresIn: cookieDuration })
+        return jwt.sign(payload, JWT_TOKEN_SECRET, { expiresIn: COOKIE_DURATION })
     } else if (type === "refresh") {
-        return jwt.sign(payload, JWT_TOKEN_SECRET, { expiresIn: tokenDuration })
+        return jwt.sign(payload, JWT_TOKEN_SECRET, { expiresIn: TOKEN_DURATION })
     } else {
         throw new Error(`token: invalid type ${type}`)
     }

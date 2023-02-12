@@ -20,6 +20,7 @@ export const retrieveAndValidateToken = async (req: IRequest, res: Response, ref
     return decodedToken
 }
 export const attachUserToRequest = async (req: IRequest, res: Response, next: NextFunction) => {
+    console.log("\n\n\n\n\n")
     const user = await retrieveAndValidateToken(req, res)
     req.user = user
 

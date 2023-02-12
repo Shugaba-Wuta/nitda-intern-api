@@ -1,17 +1,18 @@
-import mongoose, { Model, Document } from "mongoose"
+import mongoose, { Model, Document, ObjectId } from "mongoose"
 
 
 export interface IUserBase {
+    _id: string | ObjectId
     firstName: string,
     middleName?: string,
     lastName: string,
     role: string,
     permissions: string[],
-    password: string,
+    password?: string,
     email: string,
-    deleted: boolean,
+    deleted?: boolean,
     nitdaID: string,
-    deletedOn: Date,
+    deletedOn?: Date,
     active: boolean,
     createdAt?: Date,
     updatedAt?: Date,
@@ -39,7 +40,9 @@ export interface IInternBase extends IUserBase {
     onPayroll: boolean,
     schoolOfStudy: string,
     courseOfStudy: string,
-    readonly duration?: string //virtual prop
+    readonly duration?: string //virtual prop,
+    readonly account: string | ObjectId
+    readonly nextOfKin: string | ObjectId
 }
 
 export interface INysc extends IInternBase {
@@ -58,13 +61,29 @@ export interface ISiwes extends IInternBase {
     schoolContact: string,
 }
 export interface ISession {
-    _id?: string | mongoose.Types.ObjectId
-    user?: mongoose.Types.ObjectId | string,
+    _id?: string | ObjectId
+    user?: ObjectId | string,
     userSchema: string,
     ip: string | string[],
     userAgent: string,
     createdAt?: Date,
     updatedAt?: Date,
-    activityStackTrace?: mongoose.Types.ObjectId | string //virtual prop
+    activityStackTrace?: ObjectId | string //virtual prop
 
+}
+export interface IAccount {
+    bankName: string,
+    accountNumber: string,
+    bankCode?: string,
+    intern: string | ObjectId,
+    internSchema: string,
+    // default: boolean
+}
+
+export interface INextOfKin {
+    intern: string | ObjectId,
+    internSchema: string,
+    phoneNumber: string,
+    name: string,
+    email?: string
 }

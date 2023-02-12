@@ -1,26 +1,31 @@
-import { NextFunction } from "express";
+import { IAccount } from "models";
 import mongoose from "mongoose";
 
-import { USER_ROLES } from "../config/data"
+import { INTERN_SCHEMA } from "../config/data"
 
 
-const accountSchema = new mongoose.Schema({
+
+const accountSchema = new mongoose.Schema<IAccount>({
     bankName: { type: String, required: [true, "bankName is required"] },
     accountNumber: { type: String, required: [true, "accountNumber is required"], unique: true },
     bankCode: { type: Number, min: 0, required: [true, "bankCode is required"] },
     intern: { type: mongoose.Types.ObjectId, refPath: "internSchema" },
-    internSchema: { type: String, required: [true, "internSchema is required"], enum: { values: USER_ROLES, message: `internSchema must be any of: ${USER_ROLES}` } },
-    default: { type: Boolean, default: true }
+    internSchema: { type: String, required: [true, "internSchema is required"], enum: { values: INTERN_SCHEMA, message: `internSchema must be any of: ${INTERN_SCHEMA}` } },
+    // default: { type: Boolean, default: true }
 
 }, {
     timestamps: true,
     toObject: { virtuals: true },
     toJSON: { virtuals: true }
 })
-accountSchema.post("validate", async function () {
-    if (this.default) {
-        await this.$model(`Account`).updateMany({ internSchema: this.internSchema, intern: this.intern, default: true }, { default: false })
-    }
-})
+//
+// Removed because default props has been removed.
+//
+// accountSchema.post("validate", async function () {
+//     if (this.default) {
+//         await this.$model(`Account`).updateMany({ internSchema: this.internSchema, intern: this.intern, default: true }, { default: false })
+//     }
+// })
+
 
 export default mongoose.model("Account", accountSchema)
