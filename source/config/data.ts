@@ -29,3 +29,9 @@ export const USER_SORT_OPTION = { firstName: 1, lastName: 1, createdAt: 1, updat
 
 export const IMMUTABLE_USER_FIELD = ["deleted", "deletedOn", "password", "role", "email", "active", "created", "updatedAt"]
 
+export enum UserTypes {
+    Nysc = "Nysc",
+    Siwes = "Siwes",
+    Intern = "Intern",
+    Staff = "Staff"
+}

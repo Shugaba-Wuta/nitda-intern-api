@@ -1,6 +1,8 @@
 import mongoose, { Model } from "mongoose"
 import bcrypt from "bcryptjs"
 import { IUserBase } from "models"
+import { IIntern, INysc, IStaff, ISiwes } from "models"
+import { UserTypes } from "../config/data"
 
 
 const userBaseSchema = new mongoose.Schema<IUserBase>({
@@ -10,7 +12,7 @@ const userBaseSchema = new mongoose.Schema<IUserBase>({
     role: { type: String, required: [true, "role is required"] },
     permissions: { type: [String], required: [true, "permissions are required"] },
     password: { type: String },
-    email: { type: String, required: [true, "email is required"] },
+    email: { type: String, required: [true, "email is required"], index: { unique: true } },
     deleted: { type: Boolean, default: false },
     nitdaID: { type: String, required: [true, "nitdaID is required"] },
     deletedOn: { type: Date, default: Date.now },
@@ -43,5 +45,9 @@ userBaseSchema.pre("save", async function () {
 userBaseSchema.methods.comparePassword = async function (candidatePassword: string) {
     const isMatch = await bcrypt.compare(candidatePassword, this.password);
     return isMatch;
+}
+
+userBaseSchema.methods.createUser = async function (userInfo: IIntern | INysc | ISiwes | IStaff, schema: UserTypes) {
+    await this.model(schema).create()
 }
 export { userBaseSchema }
