@@ -31,6 +31,8 @@
   "dependencies": {
     "@types/bcryptjs": "^2.4.2",
     "@types/jsonwebtoken": "^9.0.1",
+    "@types/nodemailer": "^6.4.7",
+    "@types/nodemailer-express-handlebars": "^4.0.2",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -44,6 +46,8 @@
     "mongoose": "^6.9.0",
     "mongoose-hidden": "^1.9.1",
     "morgan": "^1.10.0",
+    "nodemailer": "^6.9.1",
+    "nodemailer-express-handlebars": "^6.1.0",
     "ts-node": "^10.9.1",
     "xss-clean": "^0.1.1"
   }
