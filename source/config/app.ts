@@ -46,11 +46,11 @@ app.use("/auth", authRouter)
 
 
 //Low-level middlewares
-app.use(attachUserToRequest)
+// app.use(attachUserToRequest)
 
 
 //Authenticated paths
-app.use("/users", userRouter)
+app.use("/api/users", userRouter)
 app.use(notFoundMiddleware)
 
 

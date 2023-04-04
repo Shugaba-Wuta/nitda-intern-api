@@ -1,5 +1,5 @@
 import mongoose from "mongoose"
-import { userBaseSchema } from "./userBaseSchema"
+import { userBaseSchema, } from "./userBaseSchema"
 import { GENDERS, QUALIFICATION, INTERNSHIP_STATUS } from "../config/data"
 import { IInternBase } from "models"
 

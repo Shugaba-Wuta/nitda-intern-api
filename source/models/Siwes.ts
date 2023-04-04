@@ -1,10 +1,10 @@
-import { ISiwes, IUserBaseMethods } from "models"
+import { ISiwes } from "models"
 import { model, Model, Schema } from "mongoose"
 import internBase from "./internBase"
 
-type UserModel = Model<ISiwes, {}, IUserBaseMethods>
+type UserModel = Model<ISiwes, {}>
 
-const siwesSchema = new Schema<ISiwes, UserModel, IUserBaseMethods>({
+const siwesSchema = new Schema<ISiwes, UserModel>({
     schoolID: { type: String, required: [true, "schoolID is required"] },
     schoolContact: { type: String, required: [true, "schoolContact is required"] }
 })

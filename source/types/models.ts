@@ -1,4 +1,5 @@
 import mongoose, { Model, Document, ObjectId } from "mongoose"
+import { UserTypes } from "../config/data"
 
 
 export interface IUserBase {
@@ -17,10 +18,9 @@ export interface IUserBase {
     createdAt?: Date,
     updatedAt?: Date,
     department: string,
+    comparePassword(password: string): boolean,
+    startPassResetFlow(): string
 
-}
-export interface IUserBaseMethods {
-    comparePassword(password: string): boolean
 }
 
 export interface IStaff extends IUserBase {
@@ -71,18 +71,29 @@ export interface ISession {
     activityStackTrace?: ObjectId | string //virtual prop
 
 }
+export interface IOTP {
+    _id?: string | ObjectId
+    user: ObjectId,
+    OTPCode: string,
+    purpose: string,
+    email?: string,
+    used: boolean,
+    createdAt?: Date,
+    updatedAt?: Date,
+    schema: UserTypes,
+
+}
 export interface IAccount {
     bankName: string,
     accountNumber: string,
     bankCode?: string,
-    intern: string | ObjectId,
-    internSchema: string,
-    // default: boolean
+    intern?: string | ObjectId,
+    internSchema?: string,
 }
 
 export interface INextOfKin {
-    intern: string | ObjectId,
-    internSchema: string,
+    intern?: string | ObjectId,
+    internSchema?: string,
     phoneNumber: string,
     name: string,
     email?: string

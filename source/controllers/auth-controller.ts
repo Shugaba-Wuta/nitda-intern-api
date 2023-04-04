@@ -1,11 +1,12 @@
 import { Response } from "express"
 import { Session, Intern, Nysc, Siwes, Staff } from "../models";
 import { IRequest } from "request";
-import { BadRequestError, NotFoundError } from "../errors";
+import { BadRequestError, NotFoundError, UnauthenticatedError } from "../errors";
 import { StatusCodes } from "http-status-codes";
 import { createJWT } from "../utils/jwt";
 import { COOKIE_DURATION } from "../config/data";
 import { retrieveAndValidateToken } from "../middleware/auth"
+import { IIntern, INysc, ISiwes, IStaff } from "models";
 
 
 
@@ -59,4 +60,23 @@ export const refreshToken = async (req: IRequest, res: Response) => {
 export const logout = async (req: IRequest, res: Response) => {
     res.clearCookie("user")
     return res.status(StatusCodes.OK).json({ message: "logged out", result: null, success: true })
+}
+
+export const startResetPassword = async (req: IRequest, res: Response) => {
+    const { userID } = req.user || {}
+    if (!userID) {
+        throw new UnauthenticatedError("userID is missing from req.user")
+    }
+    let nysc, siwes, staff, intern
+    nysc = await Nysc.findOne({ deleted: false, active: true, _id: userID })
+    siwes = await Siwes.findOne({ deleted: false, active: true, _id: userID })
+    staff = await Staff.findOne({ deleted: false, active: true, _id: userID })
+    intern = await Intern.findOne({ deleted: false, active: true, _id: userID })
+
+    const user: INysc | ISiwes | IStaff | IIntern | null = nysc || siwes || staff || intern
+    if (!user) {
+        throw new BadRequestError("User does not exist")
+    }
+
+    const OTPCode = user.startPassResetFlow()
 }

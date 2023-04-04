@@ -79,5 +79,4 @@ class SysEmail {
 }
 
 
-export const MailMessage = new SysEmail({}, true)
-console.log(MailMessage)
+export default new SysEmail({}, true)

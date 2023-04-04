@@ -11,7 +11,7 @@ export const errorHandlerMiddleware = (err: any, req: Request, res: Response, ne
         customError.msg = Object.values(err.errors)
             .map((item) => {
                 if (item instanceof Error)
-                    item.message
+                    return item.message
             }
             )
             .join(',');

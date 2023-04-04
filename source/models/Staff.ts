@@ -1,14 +1,12 @@
 import { Schema, model, Model } from "mongoose"
 import { userBaseSchema } from "./userBaseSchema"
-import { IStaff, IUserBaseMethods, } from "models"
+import { IStaff, } from "models"
 
 
-type UserModel = Model<IStaff, {}, IUserBaseMethods>
+type UserModel = Model<IStaff, {}>
 
-const staffSchema = new Schema<IStaff, UserModel, IUserBaseMethods>({
-    jobTitle: { type: String, required: [true, "jobTitle is required"] },
-
-
+const staffSchema = new Schema<IStaff, UserModel>({
+    jobTitle: { type: String, required: [true, "jobTitle is required"] }
 })
 
 

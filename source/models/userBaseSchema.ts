@@ -3,14 +3,17 @@ import bcrypt from "bcryptjs"
 import { IUserBase } from "models"
 import { IIntern, INysc, IStaff, ISiwes } from "models"
 import { UserTypes } from "../config/data"
+import { OTP } from "../models"
+import Mailer from "../mailing/mailer"
 
 
-const userBaseSchema = new mongoose.Schema<IUserBase>({
+
+const userBaseSchema = new mongoose.Schema<IUserBase, Model<IUserBase>>({
     firstName: { type: String, required: [true, 'firstName is required'] },
     middleName: { type: String },
     lastName: { type: String, required: [true, 'lastName is required'] },
     role: { type: String, required: [true, "role is required"] },
-    permissions: { type: [String], required: [true, "permissions are required"] },
+    permissions: { type: [String], required: [true, "permissions are required"], hide: true },
     password: { type: String },
     email: { type: String, required: [true, "email is required"], index: { unique: true } },
     deleted: { type: Boolean, default: false },
@@ -45,6 +48,16 @@ userBaseSchema.pre("save", async function () {
 userBaseSchema.methods.comparePassword = async function (candidatePassword: string) {
     const isMatch = await bcrypt.compare(candidatePassword, this.password);
     return isMatch;
+}
+userBaseSchema.methods.startPassResetFlow = async function () {
+    const schema: string = this.modelName
+    console.log("Schema: userBaseSchema: StartPassRFlow: ", schema)
+    const otp = await OTP.createAToken(String(this._id), schema, "PASSWORD-CHANGE", this.email)
+
+    await Mailer.sendEmail("shugabawuta@gmail.com", "Admin", { email: "shugabawuta@gmail.com", firstName: "Shugaba", OTPCode: otp, sessionID: "sessionID", IPAddress: "IPAddress", UserAgent: "UserAgent" }, "password-reset", "Password reset otp",)
+
+    return otp
+
 }
 
 userBaseSchema.methods.createUser = async function (userInfo: IIntern | INysc | ISiwes | IStaff, schema: UserTypes) {
