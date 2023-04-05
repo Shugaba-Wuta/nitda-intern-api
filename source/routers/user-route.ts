@@ -19,8 +19,8 @@ router.route("/")
 
 router.route("/:userID")
     .get(guard.check([["user:read"], ["nysc:read", "siwes:read", "intern:read"], ["nysc:read", "siwes:read", "intern:read", "staff:read"]]), getAUser)
-    .patch(guard.check([["user:write"]]), updateAUser)
-    .delete(guard.check(["user:write"]), deleteAUser)
+    .patch(guard.check([["user:write"], ["admin"]]), updateAUser)
+    .delete(guard.check([["user:write"], ["admin"]]), deleteAUser)
 
 
 

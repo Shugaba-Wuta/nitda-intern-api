@@ -229,7 +229,8 @@ export const updateAUser = async (req: IRequest, res: Response) => {
     Object.keys(userData).forEach((key => {
         user[key] = userData[key]
     }))
-    await user.save().populate("account", "nextOfKin")
+    await user.save()
+    await user.populate("account", "nextOfKin")
 
     return res.status(StatusCodes.OK).json({ message: `${schema} updated`, result: user, success: true })
 }
