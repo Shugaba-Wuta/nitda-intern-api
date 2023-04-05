@@ -1,6 +1,7 @@
 import { createTestAccount, createTransport } from "nodemailer"
 import hbs from "nodemailer-express-handlebars"
 import Mail, { Options } from "nodemailer/lib/mailer";
+import { CustomAPIError } from "../errors";
 
 type ExtendedOptions = Options & { template: string, context: object };
 
@@ -33,19 +34,20 @@ class SysEmail {
 
     async getTransporter() {
         if (this.test) {
-            const testAccount = await createTestAccount()
-            this.user = testAccount.user
-            this.password = testAccount.pass
+            if (process.env.TEST_EMAIL_PASS && process.env.TEST_EMAIL_USER) {
+                this.password = process.env?.TEST_EMAIL_PASS
+                this.user = process.env?.TEST_EMAIL_USER
+            }
+            else {
+                throw new CustomAPIError("TEST_EMAIL_PASS && TEST_EMAIL_USER not set")
+            }
         }
         const transporter = createTransport({
-            host: this.host,
-            port: this.port,
-            secure: this.secure,
+            service: "gmail",
             auth: {
                 user: this.user,
                 pass: this.password,
-            }
-
+            },
         })
         return transporter
     }
@@ -60,11 +62,11 @@ class SysEmail {
         transporter.use("compile", hbs({
             viewEngine: {
                 extname: '.hbs',
-                layoutsDir: 'templates/',
+                layoutsDir: 'source/mailing/templates/',
                 defaultLayout: false,
-                partialsDir: 'templates/partials',
+                partialsDir: 'source/mailing/templates/partials',
             },
-            viewPath: 'templates/',
+            viewPath: 'source/mailing/templates/',
             extName: '.hbs'
         }))
         const options: ExtendedOptions = {
@@ -74,9 +76,10 @@ class SysEmail {
             template,
             context
         }
-        transporter.sendMail(options)
+        // await transporter.verify()
+        await transporter.sendMail(options)
     }
 }
 
 
-export default new SysEmail({}, true)
+export default new SysEmail({}, process.env.ENV === "dev")

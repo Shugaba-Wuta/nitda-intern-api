@@ -1,7 +1,7 @@
 export const USER_ROLES = ["Associate", "Department", "Admin", "HR"]
 export const USER_SCHEMA = ["Nysc", "Siwes", "Intern", "Staff"]
 export const INTERN_SCHEMA = USER_SCHEMA.filter(item => {
-    item !== "Staff"
+    return item !== "Staff"
 })
 
 export const GENDERS = ["M", "F"]
@@ -38,7 +38,7 @@ export const DEPARTMENT_PERMISSION = [...DEFAULT_PERMISSION, "schedule:create", 
 //Query
 export const MAX_RESULT_LIMIT = 50
 export const USER_SORT_OPTION = { firstName: 1, lastName: 1, createdAt: 1, updatedAt: 1, email: 1 }
-export const IMMUTABLE_USER_FIELD = ["deleted", "deletedOn", "password", "role", "email", "active", "created", "updatedAt"]
+export const IMMUTABLE_USER_FIELD = ["deleted", "deletedOn", "password", "role", "email", "active", "createdAt", "updatedAt", "changedPassword", "_id"]
 
 export enum UserTypes {
     Nysc = "Nysc",

@@ -1,7 +1,11 @@
 import mongoose, { Model, Document, ObjectId } from "mongoose"
 import { UserTypes } from "../config/data"
 
-
+export interface startPassResetFlowOptions {
+    sessionID: string,
+    userAgent: string | undefined,
+    IPAddress: string[] | string
+}
 export interface IUserBase {
     _id: string | ObjectId
     firstName: string,
@@ -18,8 +22,10 @@ export interface IUserBase {
     createdAt?: Date,
     updatedAt?: Date,
     department: string,
-    comparePassword(password: string): boolean,
-    startPassResetFlow(): string
+    changedPassword: boolean,
+    comparePassword(password: string): Promise<boolean>,
+    startPassResetFlow(options: startPassResetFlowOptions): Promise<string>
+    save(): Promise<IUserBase>
 
 }
 
@@ -84,6 +90,7 @@ export interface IOTP {
 
 }
 export interface IAccount {
+    _id?: string | ObjectId
     bankName: string,
     accountNumber: string,
     bankCode?: string,
@@ -92,6 +99,7 @@ export interface IAccount {
 }
 
 export interface INextOfKin {
+    _id?: string | ObjectId
     intern?: string | ObjectId,
     internSchema?: string,
     phoneNumber: string,

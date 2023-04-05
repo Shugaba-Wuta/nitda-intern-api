@@ -1,10 +1,11 @@
 import mongoose, { Model } from "mongoose"
 import bcrypt from "bcryptjs"
-import { IUserBase } from "models"
+import { IUserBase, startPassResetFlowOptions } from "models"
 import { IIntern, INysc, IStaff, ISiwes } from "models"
-import { UserTypes } from "../config/data"
+import { Admin, Department, HR, UserTypes } from "../config/data"
 import { OTP } from "../models"
 import Mailer from "../mailing/mailer"
+import { IRequest } from "request"
 
 
 
@@ -15,6 +16,7 @@ const userBaseSchema = new mongoose.Schema<IUserBase, Model<IUserBase>>({
     role: { type: String, required: [true, "role is required"] },
     permissions: { type: [String], required: [true, "permissions are required"], hide: true },
     password: { type: String },
+    changedPassword: { type: Boolean, default: true },
     email: { type: String, required: [true, "email is required"], index: { unique: true } },
     deleted: { type: Boolean, default: false },
     nitdaID: { type: String, required: [true, "nitdaID is required"] },
@@ -49,12 +51,11 @@ userBaseSchema.methods.comparePassword = async function (candidatePassword: stri
     const isMatch = await bcrypt.compare(candidatePassword, this.password);
     return isMatch;
 }
-userBaseSchema.methods.startPassResetFlow = async function () {
-    const schema: string = this.modelName
-    console.log("Schema: userBaseSchema: StartPassRFlow: ", schema)
+userBaseSchema.methods.startPassResetFlow = async function (options: startPassResetFlowOptions) {
+    const schema: string = [Admin, HR, Department].includes(this.role) ? "Staff" : this.role
     const otp = await OTP.createAToken(String(this._id), schema, "PASSWORD-CHANGE", this.email)
 
-    await Mailer.sendEmail("shugabawuta@gmail.com", "Admin", { email: "shugabawuta@gmail.com", firstName: "Shugaba", OTPCode: otp, sessionID: "sessionID", IPAddress: "IPAddress", UserAgent: "UserAgent" }, "password-reset", "Password reset otp",)
+    await Mailer.sendEmail(this.email, "Admin", { email: this.email, firstName: this.firstName, OTPCode: otp, sessionID: options.sessionID, IPAddress: options.IPAddress, userAgent: options.userAgent }, "password-reset", "Password reset otp",)
 
     return otp
 

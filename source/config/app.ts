@@ -29,14 +29,13 @@ app.set("trust-proxy", 1)
 app.use(helmet());
 app.use(cors());
 app.use(xss());
-app.use(morgan("tiny"))
 app.use(cors())
 app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET))
 
 app.use(morgan("tiny"))
 //Unauthenticated paths
-app.use("/auth", authRouter)
+app.use("/api/auth", authRouter)
 
 
 
@@ -46,7 +45,7 @@ app.use("/auth", authRouter)
 
 
 //Low-level middlewares
-// app.use(attachUserToRequest)
+app.use(attachUserToRequest)
 
 
 //Authenticated paths

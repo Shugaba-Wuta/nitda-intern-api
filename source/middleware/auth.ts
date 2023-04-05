@@ -11,8 +11,9 @@ export const retrieveAndValidateToken = async (req: IRequest, res: Response, ref
         if (!token) {
             throw new BadRequestError("Authentication failed: Bearer token is missing")
         }
+    } else if (req.signedCookies.user) {
+        token = req.signedCookies.user
     }
-    token = req.signedCookies.user
     if (!token) {
         throw new UnauthenticatedError("Unauthenticated: Login required")
     }

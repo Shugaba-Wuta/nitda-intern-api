@@ -6,6 +6,7 @@ import { IStaff, INysc, ISiwes, IIntern, INextOfKin, IAccount } from "../types/m
 import { USER_ROLE_LEVEL1, MAX_RESULT_LIMIT, USER_SORT_OPTION, IMMUTABLE_USER_FIELD, USER_ROLE_LEVEL3, Admin, HR, Department } from "../config/data"
 import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose"
+import Mailer from "../mailing/mailer";
 
 
 export const createAUser = async (req: IRequest, res: Response) => {
@@ -31,19 +32,21 @@ export const createAUser = async (req: IRequest, res: Response) => {
         //Get the appropriate permission
         const permissions = (userData.role === Admin) ? "admin" : userData.permissions
         newUser = await new Staff({ ...userData, permissions }).save()
+        //Mail Staff
+        await Mailer.sendEmail(userData.email, "Admin", { email: userData.email, firstName: userData.firstName, role: String(userData.role).toUpperCase(), password: userData.password }, "new-account-creation", "Welcome to Intern Portal",)
 
         return res.status(StatusCodes.CREATED)
             .json({ message: "Staff created", result: { newUser }, success: true })
     }
     else if (userSchema === "Nysc") {
-        newUser = await new Nysc({ ...userData, }).save()
+        newUser = new Nysc({ ...userData, })
 
 
     } else if (userSchema === "Siwes") {
-        newUser = await new Siwes({ ...userData, }).save()
+        newUser = new Siwes({ ...userData, })
 
     } else if (userSchema === "Intern") {
-        newUser = await new Intern({ ...userData, }).save()
+        newUser = new Intern({ ...userData, })
 
     } else {
         throw new BadRequestError(`userSchema: invalid value ${userSchema}`)
@@ -61,8 +64,22 @@ export const createAUser = async (req: IRequest, res: Response) => {
         }
         throw new BadRequestError(message.join(", "))
     }
-    newAccount = await new Account({ intern: newUser._id, internSchema: userSchema, ...account }).save()
-    newNOK = await new NextOfKin({ intern: newUser._id, internSchema: userSchema, ...nextOfKin }).save()
+
+    //! Important: Save user only after account and nextOfKin have been successfully saved.
+    try {
+
+        newAccount = await new Account({ intern: String(newUser._id), internSchema: userSchema, ...account }).save()
+        newNOK = await new NextOfKin({ intern: String(newUser._id), internSchema: userSchema, ...nextOfKin }).save()
+        await newUser.save()
+
+    } catch (err) {
+        await Account.deleteMany({ intern: String(newUser._id) })
+        await NextOfKin.deleteMany({ intern: String(newUser._id) })
+        throw err
+    }
+    //Mail Intern
+    await Mailer.sendEmail(userData.email, "Admin", { email: userData.email, firstName: userData.firstName, role: String(userData.role).toUpperCase(), password: userData.password }, "new-account-creation", "Welcome to Intern Portal",)
+
 
     return res.status(StatusCodes.CREATED).json({
         message: `${userSchema} created`, result: {
@@ -146,7 +163,7 @@ export const getAUser = async (req: IRequest, res: Response) => {
         throw new BadRequestError("schema is missing")
     }
 
-    const user = await mongoose.model(String(schema)).findOne({ _id: userID }).populate("account").populate("nextOfKin")
+    const user = await mongoose.model(String(schema)).findOne({ _id: userID }).populate(["account", "nextOfKin"])
 
     res.status(StatusCodes.OK).json({ message: "Fetched user", result: user, success: true })
 }
@@ -181,17 +198,23 @@ export const deleteAUser = async (req: IRequest, res: Response) => {
 export const updateAUser = async (req: IRequest, res: Response) => {
     /*Updates a user of any Schema: Nysc, Staff, Intern, Siwes*/
     //Accessible to roles: Admin & HR
-    const { schema } = req.body
     const { userID } = req.params
-    const { userData, account, nextOfKin } = req.body
+    const { userData } = req.body
+    var { account, nextOfKin, role: schema } = userData
     if (!userID) {
         throw new BadRequestError("userID is missing")
     }
     if (!schema) {
         throw new BadRequestError("schema is missing")
     }
+    if ([Admin, HR, Department].includes(schema)) {
+        schema = "Staff"
+    }
 
     const user = await mongoose.model(`${schema}`).findOne({ _id: userID })
+    if (!user) {
+        throw new NotFoundError("User not found")
+    }
 
     if (account) {
         await mongoose.model("Account").findOneAndUpdate({ intern: user._id, internSchema: schema }, { ...account })

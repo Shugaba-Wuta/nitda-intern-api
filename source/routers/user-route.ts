@@ -12,7 +12,7 @@ const router = Router()
 
 router.route("/")
     .post(
-        // guard.check([["user:write"]]),
+        guard.check([["user:write"], ["admin"]]),
         createAUser)
     .get(guard.check([["user:read"], ["nysc:read", "siwes:read", "intern:read"], ["nysc:read", "siwes:read", "intern:read", "staff:read"]]),
         searchUser)

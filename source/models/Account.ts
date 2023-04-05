@@ -7,7 +7,7 @@ import { INTERN_SCHEMA } from "../config/data"
 
 const accountSchema = new mongoose.Schema<IAccount>({
     bankName: { type: String, required: [true, "bankName is required"] },
-    accountNumber: { type: String, required: [true, "accountNumber is required"], unique: true },
+    accountNumber: { type: String, required: [true, "accountNumber is required"] },
     bankCode: { type: Number, min: 0, required: [true, "bankCode is required"] },
     intern: { type: mongoose.Types.ObjectId, refPath: "internSchema" },
     internSchema: { type: String, required: [true, "internSchema is required"], enum: { values: INTERN_SCHEMA, message: `internSchema must be any of: ${INTERN_SCHEMA}` } },

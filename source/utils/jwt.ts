@@ -5,7 +5,7 @@ import { BadRequestError } from "../errors"
 
 
 
-export const createJWT = (payload: string, type: string = "token") => {
+export const createJWT = (payload: object, type: string = "token") => {
     const JWT_TOKEN_SECRET = process.env.JWT_TOKEN_SECRET
     if (!JWT_TOKEN_SECRET) {
         throw new Error("variable: JWT_TOKEN_SECRET is missing")
@@ -15,7 +15,7 @@ export const createJWT = (payload: string, type: string = "token") => {
     } else if (type === "cookie") {
         return jwt.sign(payload, JWT_TOKEN_SECRET, { expiresIn: COOKIE_DURATION })
     } else if (type === "refresh") {
-        return jwt.sign(payload, JWT_TOKEN_SECRET, { expiresIn: TOKEN_DURATION })
+        return jwt.sign(payload, JWT_TOKEN_SECRET, { expiresIn: TOKEN_DURATION, })
     } else {
         throw new Error(`token: invalid type ${type}`)
     }
@@ -39,7 +39,7 @@ export const decodeToken = async (token: string) => {
     }
     const decoded = jwt.verify(token, JWT_TOKEN_SECRET)
     if (decoded) {
-        return JSON.parse(String(decoded))
+        return decoded instanceof String ? JSON.parse(String(decoded)) : decoded
     }
     throw new BadRequestError("Authentication failed: invalid token")
 }

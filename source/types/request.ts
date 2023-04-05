@@ -9,7 +9,8 @@ export interface IRequest extends Request {
         userID: string | mongoose.Types.ObjectId,
         role: string,
         permissions: string[],
-        email: string
+        email: string,
+        sessionID: string
     }
 
 }

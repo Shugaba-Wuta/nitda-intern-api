@@ -4,6 +4,7 @@ import { MAX_OTP_TIME_IN_SECONDS, TIME_TOLERANCE_FOR_OTP } from "../config/data"
 
 interface OTPModel extends Model<IOTP> {
     createAToken(user: string, schema: string, purpose: string, email?: string): Promise<string>,
+    verifyToken(OTPCode: string, purpose: string, email: string,): Promise<boolean>
 }
 const otpSchema = new Schema<IOTP, OTPModel>({
     OTPCode: { type: String, trim: true, required: [true, "Token.OTPCode is missing"] },
@@ -34,6 +35,15 @@ otpSchema.statics.createAToken = async function (user, schema, purpose, email) {
 
     const token = await this.create({ user, schema, email, purpose, OTPCode: totp })
     return token.OTPCode
+}
+otpSchema.statics.verifyToken = async function (otpCode, purpose, email) {
+    const token = await this.findOne({ OTPCode: otpCode, purpose, email, used: false })
+    if (!token) {
+        return false
+    }
+    token.used = true
+    await token.save()
+    return true
 }
 
 otpSchema.index({ createdAt: 1 }, { expireAfterSeconds: Math.ceil(MAX_OTP_TIME_IN_SECONDS * TIME_TOLERANCE_FOR_OTP) })
