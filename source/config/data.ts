@@ -38,7 +38,10 @@ export const DEPARTMENT_PERMISSION = [...DEFAULT_PERMISSION, "schedule:create", 
 //Query
 export const MAX_RESULT_LIMIT = 50
 export const USER_SORT_OPTION = { firstName: 1, lastName: 1, createdAt: 1, updatedAt: 1, email: 1 }
+
 export const IMMUTABLE_USER_FIELD = ["deleted", "deletedOn", "password", "role", "email", "active", "createdAt", "updatedAt", "changedPassword", "_id"]
+export const ADMIN_ONLY_MUTABLE_FIELDS = ["highestQualification", "phoneNumber", "status", "onPayroll", "schoolOfStudy", "courseOfStudy", "callUpNumber", "classOfDegree", "LGIContact", "zonalInspectorContact", "schoolID", "schoolContact", "account", "nextOfKin", "department", "nitdaID", "expectedEndDate", "startDate", "location", "permissions"]
+export const DEPARTMENT_ONLY_MUTABLE_FIELDS = ["schedule", "cdsDays", "assignedOffice",]
 
 export enum UserTypes {
     Nysc = "Nysc",

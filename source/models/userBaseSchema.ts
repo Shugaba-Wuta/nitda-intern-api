@@ -14,15 +14,16 @@ const userBaseSchema = new mongoose.Schema<IUserBase, Model<IUserBase>>({
     middleName: { type: String },
     lastName: { type: String, required: [true, 'lastName is required'] },
     role: { type: String, required: [true, "role is required"] },
-    permissions: { type: [String], required: [true, "permissions are required"], hide: true },
+    permissions: { type: [String], required: [true, "permissions are required"], },
     password: { type: String },
-    changedPassword: { type: Boolean, default: true },
+    changedPassword: { type: Boolean, default: false },
     email: { type: String, required: [true, "email is required"], index: { unique: true } },
     deleted: { type: Boolean, default: false },
     nitdaID: { type: String, required: [true, "nitdaID is required"] },
     deletedOn: { type: Date, default: Date.now },
     active: { type: Boolean, default: true },
-    department: { type: String, required: [true, "department is required"] }
+    department: { type: String, required: [true, "department is required"] },
+    location: { type: String, required: [true, "location is required"] }
 
 
 }, { timestamps: true, toObject: { virtuals: true }, toJSON: { virtuals: true } })

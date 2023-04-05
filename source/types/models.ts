@@ -22,6 +22,7 @@ export interface IUserBase {
     createdAt?: Date,
     updatedAt?: Date,
     department: string,
+    location: string,
     changedPassword: boolean,
     comparePassword(password: string): Promise<boolean>,
     startPassResetFlow(options: startPassResetFlowOptions): Promise<string>

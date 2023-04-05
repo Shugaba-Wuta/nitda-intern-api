@@ -3,7 +3,7 @@ import { Response } from "express"
 import { BadRequestError, NotFoundError } from "../errors";
 import { Staff, Nysc, Siwes, Intern, Account, NextOfKin } from "../models";
 import { IStaff, INysc, ISiwes, IIntern, INextOfKin, IAccount } from "../types/models"
-import { USER_ROLE_LEVEL1, MAX_RESULT_LIMIT, USER_SORT_OPTION, IMMUTABLE_USER_FIELD, USER_ROLE_LEVEL3, Admin, HR, Department } from "../config/data"
+import { USER_ROLE_LEVEL1, MAX_RESULT_LIMIT, USER_SORT_OPTION, IMMUTABLE_USER_FIELD, USER_ROLE_LEVEL3, Admin, HR, Department, ADMIN_ONLY_MUTABLE_FIELDS, DEPARTMENT_ONLY_MUTABLE_FIELDS } from "../config/data"
 import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose"
 import Mailer from "../mailing/mailer";
@@ -215,22 +215,39 @@ export const updateAUser = async (req: IRequest, res: Response) => {
     if (!user) {
         throw new NotFoundError("User not found")
     }
-
+    //
+    //AVOID UNPRIVILEGED UPDATES
+    //
+    //Remove unchangeable fields from userData
+    for (const field of IMMUTABLE_USER_FIELD) {
+        delete userData[field]
+    }
+    //Remove admin/HR only updatable fields
+    if (!req.user?.permissions.includes("admin")) {
+        ADMIN_ONLY_MUTABLE_FIELDS.forEach(field => {
+            delete userData[field]
+        })
+    }
+    //Remove department only updatable fields
+    if (!req.user?.permissions.includes("user:write")) {
+        DEPARTMENT_ONLY_MUTABLE_FIELDS.forEach(field => {
+            delete userData[field]
+        })
+    }
+    //
+    //PERFORM NECESSARY UPDATES
+    //
     if (account) {
         await mongoose.model("Account").findOneAndUpdate({ intern: user._id, internSchema: schema }, { ...account })
     }
     if (nextOfKin) {
         await mongoose.model("NextOfKin").findOneAndUpdate({ intern: user._id, internSchema: schema }, { ...nextOfKin })
     }
-
-    for (const field of IMMUTABLE_USER_FIELD) {
-        delete userData[field]
-    }
     Object.keys(userData).forEach((key => {
         user[key] = userData[key]
     }))
     await user.save()
-    await user.populate("account", "nextOfKin")
+    await user.populate(["account", "nextOfKin"])
 
     return res.status(StatusCodes.OK).json({ message: `${schema} updated`, result: user, success: true })
 }
