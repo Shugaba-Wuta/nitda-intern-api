@@ -14,7 +14,7 @@ router.route("/")
     .post(
         guard.check([["admin"]]),
         createAUser)
-    .get(guard.check([["user:read"], ["nysc:read", "siwes:read", "intern:read"], ["nysc:read", "siwes:read", "intern:read", "staff:read"]]),
+    .get(guard.check([["user:read"], ["nysc:read", "siwes:read", "intern:read"], ["nysc:read", "siwes:read", "intern:read", "staff:read"], ["admin"]]),
         searchUser)
 
 router.route("/:userID")

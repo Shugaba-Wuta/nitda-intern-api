@@ -3,7 +3,7 @@ import { Response } from "express"
 import { BadRequestError, NotFoundError } from "../errors";
 import { Staff, Nysc, Siwes, Intern, Account, NextOfKin } from "../models";
 import { IStaff, INysc, ISiwes, IIntern, INextOfKin, IAccount } from "../types/models"
-import { USER_ROLE_LEVEL1, MAX_RESULT_LIMIT, USER_SORT_OPTION, IMMUTABLE_USER_FIELD, USER_ROLE_LEVEL3, ADMIN_ROLE, HR_ROLE, DEPARTMENT_ROLE, ADMIN_ONLY_MUTABLE_FIELDS, DEPARTMENT_ONLY_MUTABLE_FIELDS } from "../config/data"
+import { USER_ROLE_LEVEL1, MAX_RESULT_LIMIT, USER_SORT_OPTION, IMMUTABLE_USER_FIELD, USER_ROLE_LEVEL3, ADMIN_ROLE, HR_ROLE, DEPARTMENT_ROLE, ADMIN_ONLY_MUTABLE_FIELDS, DEPARTMENT_ONLY_MUTABLE_FIELDS, USER_ROLE_LEVEL0, USER_NYSC, USER_SIWES, USER_INTERN } from "../config/data"
 import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose"
 import Mailer from "../mailing/mailer";
@@ -93,11 +93,11 @@ export const searchUser = async (req: IRequest, res: Response) => {
 
     var { query, includeStaff: staff = false, schemas, deleted = false, active = true, sortBy = "relevance", pageNumber = 1, limit } = req.query
     //set default params for non-admin and non-HR  query params
-    if (req.user && !USER_ROLE_LEVEL1.includes(req.user.role)) {
+    if (req.user && !req.user.permissions.includes(ADMIN_ROLE.toLowerCase())) {
         active = true
         staff = false
         deleted = false
-        schemas = "Nysc,Siwes,Intern"
+        // schemas = "Nysc,Siwes,Intern"
     }
     //set the limit
     limit = String((Number(limit) <= MAX_RESULT_LIMIT) ? limit : MAX_RESULT_LIMIT)
@@ -105,15 +105,25 @@ export const searchUser = async (req: IRequest, res: Response) => {
     //set the skip
     const skipResult = Number(pageNumber) > 0 ? (Number(pageNumber) - 1) * Number(limit) : Number(limit)
     const result = []
+    schemas = String(schemas).replace(/\s/, "").split(",")
+    //Verify Schemas are the interns
+    schemas.forEach(item => {
+        if (![USER_NYSC, USER_SIWES, USER_INTERN].includes(item)) {
+            throw new BadRequestError("Invalid option in schemas")
+        }
+    })
+
     for await (const schema of String(schemas).replace(/\s/, "").split(",")) {
-        //Loop over selected `schema s` and add destructured query to result for sorting.
         let preQuery = await mongoose.model(`${schema}`).aggregate([{ $match: { $text: { $search: String(query) } } }, {
-            $project: {
+            $addFields: {
                 _id: 0, score: {
                     $meta: "textScore"
                 }
             }
-        }, { $match: { active, deleted } }])
+        },
+        { $match: { active: Boolean(active), deleted: Boolean(deleted) } }
+        ]
+        )
             .skip(skipResult)
             .limit(Number(limit))
         result.push(...preQuery)
@@ -121,12 +131,12 @@ export const searchUser = async (req: IRequest, res: Response) => {
     if (staff) {
         //if elevated role and includeStaff:staff =true, add staff to result
         let staffQuery = await Staff.aggregate([{ $match: { $text: { $search: String(query) } } }, {
-            $project: {
+            $addFields: {
                 _id: 0, score: {
                     $meta: "textScore"
                 }
             }
-        }, { $match: { active } }])
+        }, { $match: { active: Boolean(active), deleted: Boolean(deleted) } }])
             .skip(skipResult)
             .limit(Number(limit))
         result.push(...staffQuery)

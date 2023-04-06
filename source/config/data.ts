@@ -6,9 +6,9 @@ export const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
 export const INTERNSHIP_STATUS = ["Ongoing", "Done", "Aborted"]
 
-export const COOKIE_DURATION = "12h"
+export const COOKIE_DURATION = "2d"
 
-export const TOKEN_DURATION = "10m"
+export const TOKEN_DURATION = "1d"
 
 export const HR_ROLE = "HR"
 export const ADMIN_ROLE = "Admin"

@@ -27,7 +27,14 @@ const userBaseSchema = new mongoose.Schema<IUserBase, Model<IUserBase>>({
 
 
 }, { timestamps: true, toObject: { virtuals: true }, toJSON: { virtuals: true } })
-userBaseSchema.index({ department: "text", location: "text", firstName: "text", lastName: "text", middleName: "text", email: "text" })
+userBaseSchema.index({
+    department: "text",
+    location: "text",
+    firstName: "text",
+    lastName: "text",
+    middleName: "text",
+    email: "text"
+}, { weights: { email: 50, location: 25, firstName: 35, lastName: 35, middleName: 25, } })
 
 
 userBaseSchema.pre('save', async function () {
