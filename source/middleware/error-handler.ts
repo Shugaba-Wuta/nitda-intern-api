@@ -29,7 +29,7 @@ export const errorHandlerMiddleware = (err: any, req: Request, res: Response, ne
         customError.statusCode = StatusCodes.NOT_FOUND;
     }
     if (err.code === "permission_denied") {
-        customError.msg = `Unauthorized access to this route ${req.url}.`
+        customError.msg = `Unauthorized access to this route ${req.method} ${req.url}.`
         customError.statusCode = StatusCodes.FORBIDDEN
     }
     console.log(err)
