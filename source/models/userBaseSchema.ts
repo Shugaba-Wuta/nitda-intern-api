@@ -27,6 +27,7 @@ const userBaseSchema = new mongoose.Schema<IUserBase, Model<IUserBase>>({
 
 
 }, { timestamps: true, toObject: { virtuals: true }, toJSON: { virtuals: true } })
+userBaseSchema.index({ department: "text", location: "text", firstName: "text", lastName: "text", middleName: "text", email: "text" })
 
 
 userBaseSchema.pre('save', async function () {
