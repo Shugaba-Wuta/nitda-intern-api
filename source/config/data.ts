@@ -1,9 +1,3 @@
-export const USER_ROLES = ["Associate", "Department", "Admin", "HR"]
-export const USER_SCHEMA = ["Nysc", "Siwes", "Intern", "Staff"]
-export const INTERN_SCHEMA = USER_SCHEMA.filter(item => {
-    return item !== "Staff"
-})
-
 export const GENDERS = ["M", "F"]
 
 export const QUALIFICATION = ["BSc.", "MSc.", "BEng.", "MEng.", "BA", "PhD.", "HND", "LLB"]
@@ -16,21 +10,30 @@ export const COOKIE_DURATION = "12h"
 
 export const TOKEN_DURATION = "10m"
 
-export const HR = "HR"
-export const Admin = "Admin"
-export const Nysc = "Nysc"
-export const Department = "Department"
-export const Siwes = "Siwes"
-export const Intern = "Intern"
+export const HR_ROLE = "HR"
+export const ADMIN_ROLE = "Admin"
+export const NYSC_ROLE = "Nysc"
+export const DEPARTMENT_ROLE = "Department"
+export const SIWES_ROLE = "Siwes"
+export const INTERN_ROLE = "Intern"
+export const USER_STAFF = "Staff"
+export const USER_NYSC = NYSC_ROLE
+export const USER_SIWES = SIWES_ROLE
+export const USER_INTERN = INTERN_ROLE
+
+export const USER_SCHEMA = [NYSC_ROLE, SIWES_ROLE, INTERN_ROLE, USER_STAFF]
+export const INTERN_SCHEMA = USER_SCHEMA.filter(item => {
+    return item !== USER_STAFF
+})
 
 
 
 // export const USER_ROLE_LEVEL3 = ["Associate"]
-export const USER_ROLE_LEVEL3 = [Department, Admin, HR, Nysc, Siwes, Intern]
-export const USER_ROLE_LEVEL2 = [Department, Admin, HR]
-export const USER_ROLE_LEVEL1 = [Admin, HR]
-export const USER_ROLE_LEVEL0 = [Admin]
-export const ASSOCIATE_SCHEMA = [Nysc, Siwes, Intern]
+export const USER_ROLE_LEVEL3 = [DEPARTMENT_ROLE, ADMIN_ROLE, HR_ROLE, NYSC_ROLE, SIWES_ROLE, INTERN_ROLE]
+export const USER_ROLE_LEVEL2 = [DEPARTMENT_ROLE, ADMIN_ROLE, HR_ROLE]
+export const USER_ROLE_LEVEL1 = [ADMIN_ROLE, HR_ROLE]
+export const USER_ROLE_LEVEL0 = [ADMIN_ROLE]
+export const ASSOCIATE_SCHEMA = [NYSC_ROLE, SIWES_ROLE, INTERN_ROLE]
 //Permissions
 export const DEFAULT_PERMISSION = ["nysc:read", "siwes:read", "intern:read", "schedule:read"]
 export const ELEVATED_STAFF_PERMISSION = [...DEFAULT_PERMISSION, "nysc:create", "nysc:delete", "nysc:update", "siwes:create", "siwes:delete", "siwes:update", "intern:create", "intern:update", "intern:delete", "user:read", "user:write"]

@@ -2,7 +2,7 @@ import mongoose, { Model } from "mongoose"
 import bcrypt from "bcryptjs"
 import { IUserBase, startPassResetFlowOptions } from "models"
 import { IIntern, INysc, IStaff, ISiwes } from "models"
-import { Admin, Department, HR, UserTypes } from "../config/data"
+import { ADMIN_ROLE, DEPARTMENT_ROLE, HR_ROLE, UserTypes } from "../config/data"
 import { OTP } from "../models"
 import Mailer from "../mailing/mailer"
 import { IRequest } from "request"
@@ -53,7 +53,7 @@ userBaseSchema.methods.comparePassword = async function (candidatePassword: stri
     return isMatch;
 }
 userBaseSchema.methods.startPassResetFlow = async function (options: startPassResetFlowOptions) {
-    const schema: string = [Admin, HR, Department].includes(this.role) ? "Staff" : this.role
+    const schema: string = [ADMIN_ROLE, HR_ROLE, DEPARTMENT_ROLE].includes(this.role) ? "Staff" : this.role
     const otp = await OTP.createAToken(String(this._id), schema, "PASSWORD-CHANGE", this.email)
 
     await Mailer.sendEmail(this.email, "Admin", { email: this.email, firstName: this.firstName, OTPCode: otp, sessionID: options.sessionID, IPAddress: options.IPAddress, userAgent: options.userAgent }, "password-reset", "Password reset otp",)

@@ -3,7 +3,7 @@ import { Response } from "express"
 import { BadRequestError, NotFoundError } from "../errors";
 import { Staff, Nysc, Siwes, Intern, Account, NextOfKin } from "../models";
 import { IStaff, INysc, ISiwes, IIntern, INextOfKin, IAccount } from "../types/models"
-import { USER_ROLE_LEVEL1, MAX_RESULT_LIMIT, USER_SORT_OPTION, IMMUTABLE_USER_FIELD, USER_ROLE_LEVEL3, Admin, HR, Department, ADMIN_ONLY_MUTABLE_FIELDS, DEPARTMENT_ONLY_MUTABLE_FIELDS } from "../config/data"
+import { USER_ROLE_LEVEL1, MAX_RESULT_LIMIT, USER_SORT_OPTION, IMMUTABLE_USER_FIELD, USER_ROLE_LEVEL3, ADMIN_ROLE, HR_ROLE, DEPARTMENT_ROLE, ADMIN_ONLY_MUTABLE_FIELDS, DEPARTMENT_ONLY_MUTABLE_FIELDS } from "../config/data"
 import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose"
 import Mailer from "../mailing/mailer";
@@ -28,9 +28,9 @@ export const createAUser = async (req: IRequest, res: Response) => {
     var newUser: IStaff | INysc | ISiwes | IIntern
     var newAccount: IAccount
     var newNOK: INextOfKin
-    if ([Admin, HR, Department].includes(userSchema)) {
+    if ([ADMIN_ROLE, HR_ROLE, DEPARTMENT_ROLE].includes(userSchema)) {
         //Get the appropriate permission
-        const permissions = (userData.role === Admin) ? "admin" : userData.permissions
+        const permissions = (userData.role === ADMIN_ROLE) ? "admin" : userData.permissions
         newUser = await new Staff({ ...userData, permissions }).save()
         //Mail Staff
         await Mailer.sendEmail(userData.email, "Admin", { email: userData.email, firstName: userData.firstName, role: String(userData.role).toUpperCase(), password: userData.password }, "new-account-creation", "Welcome to Intern Portal",)
@@ -207,7 +207,7 @@ export const updateAUser = async (req: IRequest, res: Response) => {
     if (!schema) {
         throw new BadRequestError("schema is missing")
     }
-    if ([Admin, HR, Department].includes(schema)) {
+    if ([ADMIN_ROLE, HR_ROLE, DEPARTMENT_ROLE].includes(schema)) {
         schema = "Staff"
     }
 
