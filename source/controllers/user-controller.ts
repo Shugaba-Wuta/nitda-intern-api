@@ -3,7 +3,7 @@ import { Response } from "express"
 import { BadRequestError, NotFoundError } from "../errors";
 import { Staff, Nysc, Siwes, Intern, Account, NextOfKin } from "../models";
 import { IStaff, INysc, ISiwes, IIntern, INextOfKin, IAccount } from "../types/models"
-import { USER_ROLE_LEVEL1, MAX_RESULT_LIMIT, USER_SORT_OPTION, IMMUTABLE_USER_FIELD, USER_ROLE_LEVEL3, ADMIN_ROLE, HR_ROLE, DEPARTMENT_ROLE, ADMIN_ONLY_MUTABLE_FIELDS, DEPARTMENT_ONLY_MUTABLE_FIELDS, USER_ROLE_LEVEL0, USER_NYSC, USER_SIWES, USER_INTERN } from "../config/data"
+import { USER_ROLE_LEVEL1, MAX_RESULT_LIMIT, USER_SORT_OPTION, IMMUTABLE_USER_FIELD, USER_ROLE_LEVEL3, ADMIN_ROLE, HR_ROLE, DEPARTMENT_ROLE, ADMIN_ONLY_MUTABLE_FIELDS, DEPARTMENT_ONLY_MUTABLE_FIELDS, USER_ROLE_LEVEL0, USER_NYSC, USER_SIWES, USER_INTERN, USER_STAFF } from "../config/data"
 import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose"
 import Mailer from "../mailing/mailer";
@@ -171,6 +171,9 @@ export const getAUser = async (req: IRequest, res: Response) => {
     }
     if (!schema) {
         throw new BadRequestError("schema is missing")
+    }
+    if (![USER_NYSC, USER_SIWES, USER_INTERN, USER_STAFF].includes(String(schema))) {
+        throw new BadRequestError("Invalid option in schema")
     }
 
     const user = await mongoose.model(String(schema)).findOne({ _id: userID }).populate(["account", "nextOfKin"])
