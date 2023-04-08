@@ -1,16 +1,22 @@
 import { IRequest } from "request";
 import { Response } from "express"
-import { BadRequestError, NotFoundError } from "../errors";
-import { Staff, Nysc, Siwes, Intern, Account, NextOfKin } from "../models";
+import { BadRequestError, NotFoundError, UnauthorizedError } from "../errors";
+import { Staff, Nysc, Siwes, Intern, Account, NextOfKin, Session, Documents } from "../models";
 import { IStaff, INysc, ISiwes, IIntern, INextOfKin, IAccount } from "../types/models"
-import { USER_ROLE_LEVEL1, MAX_RESULT_LIMIT, USER_SORT_OPTION, IMMUTABLE_USER_FIELD, USER_ROLE_LEVEL3, ADMIN_ROLE, HR_ROLE, DEPARTMENT_ROLE, ADMIN_ONLY_MUTABLE_FIELDS, DEPARTMENT_ONLY_MUTABLE_FIELDS, USER_ROLE_LEVEL0, USER_NYSC, USER_SIWES, USER_INTERN, USER_STAFF } from "../config/data"
+import { MAX_RESULT_LIMIT, USER_SORT_OPTION, IMMUTABLE_USER_FIELD, USER_ROLE_LEVEL3, ADMIN_ROLE, HR_ROLE, DEPARTMENT_ROLE, ADMIN_ONLY_MUTABLE_FIELDS, DEPARTMENT_ONLY_MUTABLE_FIELDS, USER_NYSC, USER_SIWES, USER_INTERN, USER_STAFF } from "../config/data"
 import { StatusCodes } from "http-status-codes";
-import mongoose from "mongoose"
+import mongoose, { Schema } from "mongoose"
 import Mailer from "../mailing/mailer";
+import { formatTemplate, saveFileToServer } from "../utils/generic-utils";
+import stream from "stream"
+import { UploadedFile } from "express-fileupload";
+import path from "path"
 
 
 export const createAUser = async (req: IRequest, res: Response) => {
-    /*Creates a user of any Schema: Nysc, Staff, Intern, Siwes*/
+    /**
+     * Creates a user of any Schema: Nysc, Staff, Intern, Siwes
+     */
     const { userData } = req.body
     const { role: userSchema } = req.body.userData
 
@@ -163,7 +169,9 @@ export const searchUser = async (req: IRequest, res: Response) => {
 }
 
 export const getAUser = async (req: IRequest, res: Response) => {
-    /*Fetches a user of any Schema: Nysc, Staff, Intern, Siwes*/
+    /*
+     * Fetches a user of any Schema: Nysc, Staff, Intern, Siwes
+    */
     const { userID } = req.params
     const { schema } = req.query
     if (!userID) {
@@ -181,8 +189,10 @@ export const getAUser = async (req: IRequest, res: Response) => {
     res.status(StatusCodes.OK).json({ message: "Fetched user", result: user, success: true })
 }
 
-export const deleteAUser = async (req: IRequest, res: Response) => {
-    /*Deactivates  a user of any Schema: Nysc, Staff, Intern, Siwes*/
+export const deactivateUser = async (req: IRequest, res: Response) => {
+    /**
+     * Deactivates  a user of any Schema: Nysc, Staff, Intern, Siwes
+     */
 
     //Accessible to roles: Admin & HR
     const { schema, deleteUser, deactivate } = req.body
@@ -194,18 +204,62 @@ export const deleteAUser = async (req: IRequest, res: Response) => {
     if (!schema) {
         throw new BadRequestError("schema is missing")
     }
-
+    if (![USER_NYSC, USER_SIWES, USER_INTERN, USER_STAFF].includes(String(schema))) {
+        throw new BadRequestError("Invalid option in schema")
+    }
     const user = await mongoose.model(`${schema}`).findOne({ _id: userID })
     if (!user) {
         throw new NotFoundError(`${schema}: not found`)
     }
     user.deleted = deleteUser
     user.active = !deactivate
+    user.deletedOn = Date.now()
     await user.save()
 
     return res.status(StatusCodes.OK).json({ message: `${schema} deleted`, result: true, success: true })
-
-
+}
+export const reactiveUser = async (req: IRequest, res: Response) => {
+    /**
+     * Reactivates previously deactivated/ banned accounts. Artifacts are left untempered.
+     */
+    const { schema } = req.body
+    const { userID } = req.params
+    if (!userID) { throw new BadRequestError("userID is missing") }
+    if (!schema) { throw new BadRequestError("schema is missing") }
+    if (![USER_NYSC, USER_SIWES, USER_INTERN, USER_STAFF].includes(String(schema))) {
+        throw new BadRequestError("Invalid option in schema")
+    }
+    const user = await mongoose.model(String(schema)).findOne({ deleted: true, active: false, _id: userID })
+    if (!user) { throw new NotFoundError(`${schema} does not exist`) }
+    user.deleted = false
+    user.active = true
+    user.deleted = null
+    await user.save()
+    return res.status(StatusCodes.OK).json({ message: `${schema} has been revived`, result: user, success: true })
+}
+export const permanentlyDeleteUser = async (req: IRequest, res: Response) => {
+    /**
+     * Permanently deletes a user with corresponding artifacts generated
+     */
+    const { schema } = req.body
+    const { userID } = req.params
+    if (!req.user?.permissions.includes(ADMIN_ROLE.toLocaleUpperCase())) {
+        throw new UnauthorizedError("Permission denied")
+    }
+    if (!userID) { throw new BadRequestError("userID is missing") }
+    if (!schema) { throw new BadRequestError("schema is missing") }
+    if (![USER_NYSC, USER_SIWES, USER_INTERN, USER_STAFF].includes(String(schema))) {
+        throw new BadRequestError("Invalid option in schema")
+    }
+    const user = await mongoose.model(String(schema)).findOneAndDelete({ deleted: true, active: false, _id: userID })
+    if (!user) { throw new NotFoundError(`${schema} does not exist`) }
+    if (schema != USER_STAFF) {
+        await Account.deleteMany({ intern: userID, internSchema: schema })
+        await NextOfKin.deleteMany({ intern: userID, internSchema: schema })
+        await Session.deleteMany({ user: userID, userSchema: schema })
+        await Documents.deleteMany({ user: userID, userSchema: schema })
+    }
+    res.status(StatusCodes.OK).json({ message: "Delete successful", user: null, success: true })
 }
 
 export const updateAUser = async (req: IRequest, res: Response) => {
@@ -263,4 +317,59 @@ export const updateAUser = async (req: IRequest, res: Response) => {
     await user.populate(["account", "nextOfKin"])
 
     return res.status(StatusCodes.OK).json({ message: `${schema} updated`, result: user, success: true })
+}
+export const downloadAcceptanceOrClearance = async (req: IRequest, res: Response) => {
+    /*
+    * Creates "ACCEPTANCE" or "FINAL"
+    */
+    const { userID, docType, schema } = req.body
+    const [ACCEPTANCE, FINAL] = ["ACCEPTANCE", "FINAL"]
+    const DOCTYPES = [ACCEPTANCE, FINAL]
+    if (!userID) {
+        throw new BadRequestError("userID is missing")
+    }
+    if (!docType) {
+        throw new BadRequestError("docType is missing")
+    }
+    if (!DOCTYPES.includes(String(docType))) {
+        throw new BadRequestError("invalid value for docType")
+    }
+    if (!schema) { throw new BadRequestError("schema is missing") }
+    if (![USER_NYSC, USER_SIWES, USER_INTERN].includes(String(schema))) {
+        throw new BadRequestError("Invalid option in schema")
+    }
+    const user = await mongoose.model(String(schema)).findOne({ _id: userID })
+    if (!user) {
+        throw new NotFoundError(`${schema} does not exist`)
+    }
+    //Generate Template for NYSC
+    if (user.role == USER_NYSC) {
+        const { callUpNumber, fullName, gender, courseOfStudy, stateCode } = user
+        const data = { callUpNumber, fullName, gender, courseOfStudy, stateCode }
+        const template = docType === ACCEPTANCE ? "acceptance-letter.docx" : "final-clearance-nysc.docx"
+        const parsedFileBuffer = formatTemplate(template, data)
+        var readStream = new stream.PassThrough();
+        readStream.end(parsedFileBuffer);
+        res.set('Content-disposition', 'attachment; filename=' + docType + " - " + stateCode);
+        res.set('Content-Type', 'text/plain');
+        readStream.pipe(res);
+        console.log("Done formatting and sending response!")
+    }
+
+
+}
+
+export const uploadDocs = async (req: IRequest, res: Response) => {
+    const { userID, schema } = req.body
+    const docs = req.files?.docs as UploadedFile | UploadedFile[]
+    if (!userID) {
+        throw new BadRequestError("userID is missing")
+    }
+    if (!schema) { throw new BadRequestError("schema is missing") }
+    if (![USER_NYSC, USER_SIWES, USER_INTERN, USER_STAFF].includes(String(schema))) {
+        throw new BadRequestError("Invalid option in schema")
+    }
+    const docsArray = docs instanceof Array ? docs : [docs]
+    const uploadedFileInfo = await saveFileToServer(path.resolve(__dirname, "static", "public", schema, userID), docsArray)
+    res.status(StatusCodes.OK).json({ message: "Upload complete", result: uploadedFileInfo, success: true })
 }

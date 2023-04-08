@@ -1,3 +1,5 @@
+export const MAX_FILE_UPLOAD_IN_MB = 5
+
 export const GENDERS = ["M", "F"]
 
 export const QUALIFICATION = ["BSc.", "MSc.", "BEng.", "MEng.", "BA", "PhD.", "HND", "LLB"]

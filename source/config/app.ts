@@ -6,6 +6,7 @@ import helmet from "helmet"
 import cors from "cors"
 import xss from "xss-clean"
 import cookieParser from "cookie-parser"
+import fileUpload from "express-fileupload"
 const expressAsyncErrors = require("express-async-errors")
 
 
@@ -20,6 +21,7 @@ import { connectDB } from '../db/connect'
 import { attachUserToRequest } from '../middleware/auth'
 import authRouter from "../routers/auth-route"
 import userRouter from "../routers/user-route"
+import { MAX_FILE_UPLOAD_IN_MB } from "./data"
 
 const app = express()
 app.set("trust-proxy", 1)
@@ -46,6 +48,14 @@ app.use("/api/auth", authRouter)
 
 //Low-level middlewares
 app.use(attachUserToRequest)
+app.use(fileUpload({
+    createParentPath: true,
+    safeFileNames: true,
+    preserveExtension: true,
+    abortOnLimit: true,
+    limits: { fileSize: MAX_FILE_UPLOAD_IN_MB * 1024 * 1024 }
+}))
+
 
 
 //Authenticated paths

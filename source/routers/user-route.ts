@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { getAUser, deleteAUser, updateAUser, createAUser, searchUser } from "../controllers/user-controller";
+import { getAUser, deactivateUser, updateAUser, createAUser, searchUser, uploadDocs, permanentlyDeleteUser, reactiveUser, downloadAcceptanceOrClearance } from "../controllers/user-controller";
 
 import guard_ from "express-jwt-permissions"
 const guard = guard_()
@@ -20,7 +20,11 @@ router.route("/")
 router.route("/:userID")
     .get(guard.check([["user:read"], ["nysc:read", "siwes:read", "intern:read"], ["nysc:read", "siwes:read", "intern:read", "staff:read"]]), getAUser)
     .patch(guard.check([["user:write"], ["admin"]]), updateAUser)
-    .delete(guard.check([["user:write"], ["admin"]]), deleteAUser)
+    .delete(guard.check([["user:write"], ["admin"]]), permanentlyDeleteUser)
+router.post("/:userID/deactivate", [guard.check(["admin"])], deactivateUser)
+router.post("/:userID/docs", [guard.check(["admin", "user:write"])], uploadDocs)
+router.post("/:userID/reactivate", [guard.check(["admin"])], reactiveUser)
+router.post("/nysc/:userID/", [guard.check(["admin"])], downloadAcceptanceOrClearance)
 
 
 
