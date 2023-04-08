@@ -1,11 +1,11 @@
 import { IAccount } from "models";
-import mongoose from "mongoose";
+import mongoose, { Model } from "mongoose";
 
 import { INTERN_SCHEMA } from "../config/data"
 
+type AccountModel = Model<IAccount>
 
-
-const accountSchema = new mongoose.Schema<IAccount>({
+const accountSchema = new mongoose.Schema<IAccount, AccountModel>({
     bankName: { type: String, required: [true, "bankName is required"] },
     accountNumber: { type: String, required: [true, "accountNumber is required"] },
     bankCode: { type: Number, min: 0, required: [true, "bankCode is required"] },

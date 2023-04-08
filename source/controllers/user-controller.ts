@@ -370,6 +370,6 @@ export const uploadDocs = async (req: IRequest, res: Response) => {
         throw new BadRequestError("Invalid option in schema")
     }
     const docsArray = docs instanceof Array ? docs : [docs]
-    const uploadedFileInfo = await saveFileToServer(path.resolve(__dirname, "static", "public", schema, userID), docsArray)
-    res.status(StatusCodes.OK).json({ message: "Upload complete", result: uploadedFileInfo, success: true })
+    const uploadedDocs = await saveFileToServer(["source", "static"], docsArray, userID, schema)
+    res.status(StatusCodes.OK).json({ message: "Upload complete", result: uploadedDocs, success: true })
 }

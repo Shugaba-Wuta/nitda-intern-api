@@ -1,10 +1,12 @@
 import Docxtemplater from "docxtemplater"
 import PizZip from "pizzip"
-import { resolve } from "path"
+import path from "path"
 import fs from "fs"
 import { promisify } from "util"
 import { UploadedFile } from "express-fileupload"
 import url from "url"
+import { IDocument } from "models"
+import { Documents } from "../models"
 export const getReadableDate = function () {
     let date = new Date()
     let months = ["January", "February",
@@ -16,7 +18,7 @@ export const getReadableDate = function () {
 
 export const formatTemplate = async function (templateName: string, data: { callUpNumber?: string, fullName?: string, gender?: string, courseOfStudy?: string, stateCode: string, }) {
     const date = getReadableDate()
-    const dir = resolve(__dirname, "source", "static", "templates", templateName)
+    const dir = path.resolve(__dirname, "source", "static", "templates", templateName)
     console.log(dir)
     const readFile = promisify(fs.readFile)
 
@@ -34,13 +36,28 @@ export const formatTemplate = async function (templateName: string, data: { call
     })
     return bufferOutput
 }
+export const generateSlug = (text: string) => {
 
-export const saveFileToServer = async (path: string, files: UploadedFile[]) => {
+    return text.toString().toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-')
+        .replace(/^-+/, '')
+        .replace(/-+$/, '')
 
-    //
-    const urls: { name: string, url: string }[] = []
+}
+
+export const saveFileToServer = async (parentPaths: string[], files: UploadedFile[], user: string, userSchema: string) => {
+    const newDocs: IDocument[] = []
+    const parentDir = path.resolve(__dirname, ...parentPaths, userSchema, user)
     for await (const file of files) {
-        await file.mv(path)
-        urls.push({ name: file.name, url: resolve(path, file.name) })
+        const name = path.parse(file.name)
+        const slug: string = generateSlug(name.name)
+        file.name = slug + name.ext
+        await file.mv(parentDir)
+        let docs: IDocument = { slug, link: path.resolve(parentDir, file.name), userSchema, user }
+        newDocs.push(docs)
     }
+    return await Documents.insertMany(newDocs)
+
 }

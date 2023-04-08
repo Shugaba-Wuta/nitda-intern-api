@@ -107,3 +107,15 @@ export interface INextOfKin {
     name: string,
     email?: string
 }
+export interface IDocument {
+    _id?: string | ObjectId,
+    slug: string,
+    link: string,
+    deleted?: boolean,
+    deletedOn?: Date,
+    userSchema: string,
+    user: string | ObjectId,
+    createdAt?: Date,
+    updatedAt?: Date,
+
+}

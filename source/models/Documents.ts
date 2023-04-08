@@ -1,8 +1,10 @@
-import mongoose from "mongoose"
+import mongoose, { Model, Schema } from "mongoose"
 import { USER_SCHEMA } from "../config/data"
+import { IDocument } from "../types/models"
 
-const documentSchema = new mongoose.Schema({
-    title: { type: String, required: [true, " document title is required"] },
+type DocumentModel = Model<IDocument, {}>
+
+const documentSchema = new Schema<IDocument, DocumentModel>({
     slug: { type: String, required: [true, " document slug is required"] },
     link: { type: String, required: [true, "document link is required"] },
     deleted: { type: Boolean, default: false },
