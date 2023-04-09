@@ -5,7 +5,6 @@ import { IIntern, INysc, IStaff, ISiwes } from "models"
 import { ADMIN_ROLE, DEPARTMENT_ROLE, HR_ROLE, UserTypes } from "../config/data"
 import { OTP } from "../models"
 import Mailer from "../mailing/mailer"
-import { IRequest } from "request"
 
 
 
@@ -27,6 +26,10 @@ const userBaseSchema = new mongoose.Schema<IUserBase, Model<IUserBase>>({
 
 
 }, { timestamps: true, toObject: { virtuals: true }, toJSON: { virtuals: true } })
+
+userBaseSchema.virtual("fullName").get(function () {
+    return this.middleName ? [this.firstName, this.middleName, this.lastName].join(" ") : [this.firstName, this.lastName].join(" ")
+})
 userBaseSchema.index({
     department: "text",
     location: "text",

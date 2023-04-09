@@ -18,10 +18,8 @@ export const getReadableDate = function () {
 
 export const formatTemplate = async function (templateName: string, data: { callUpNumber?: string, fullName?: string, gender?: string, courseOfStudy?: string, stateCode: string, }) {
     const date = getReadableDate()
-    const dir = path.resolve(__dirname, "source", "static", "templates", templateName)
-    console.log(dir)
+    const dir = path.resolve(__basedir, "static", "templates", templateName)
     const readFile = promisify(fs.readFile)
-
     const content = await readFile(dir)
     const zip = new PizZip(content);
 
@@ -49,11 +47,12 @@ export const generateSlug = (text: string) => {
 
 export const saveFileToServer = async (parentPaths: string[], files: UploadedFile[], user: string, userSchema: string) => {
     const newDocs: IDocument[] = []
-    const parentDir = path.resolve(__dirname, ...parentPaths, userSchema, user)
+    const parentDir = path.resolve(__basedir, ...parentPaths, userSchema, user)
     for await (const file of files) {
         const name = path.parse(file.name)
         const slug: string = generateSlug(name.name)
         file.name = slug + name.ext
+        console.log(file.name)
         await file.mv(parentDir)
         let docs: IDocument = { slug, link: path.resolve(parentDir, file.name), userSchema, user }
         newDocs.push(docs)

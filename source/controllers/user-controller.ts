@@ -7,7 +7,7 @@ import { MAX_RESULT_LIMIT, USER_SORT_OPTION, IMMUTABLE_USER_FIELD, USER_ROLE_LEV
 import { StatusCodes } from "http-status-codes";
 import mongoose, { Schema } from "mongoose"
 import Mailer from "../mailing/mailer";
-import { formatTemplate, saveFileToServer } from "../utils/generic-utils";
+import { formatTemplate, generateSlug, saveFileToServer } from "../utils/generic-utils";
 import stream from "stream"
 import { UploadedFile } from "express-fileupload";
 import path from "path"
@@ -195,7 +195,7 @@ export const deactivateUser = async (req: IRequest, res: Response) => {
      */
 
     //Accessible to roles: Admin & HR
-    const { schema, deleteUser, deactivate } = req.body
+    const { schema } = req.body
     const { userID } = req.params
 
     if (!userID) {
@@ -207,18 +207,19 @@ export const deactivateUser = async (req: IRequest, res: Response) => {
     if (![USER_NYSC, USER_SIWES, USER_INTERN, USER_STAFF].includes(String(schema))) {
         throw new BadRequestError("Invalid option in schema")
     }
-    const user = await mongoose.model(`${schema}`).findOne({ _id: userID })
+    const user = await mongoose.model(`${schema}`).findOne({ _id: userID, active: true, deleted: false })
     if (!user) {
         throw new NotFoundError(`${schema}: not found`)
     }
-    user.deleted = deleteUser
-    user.active = !deactivate
+    user.deleted = true
+    user.active = false
     user.deletedOn = Date.now()
+    user.onPayroll = false
     await user.save()
 
     return res.status(StatusCodes.OK).json({ message: `${schema} deleted`, result: true, success: true })
 }
-export const reactiveUser = async (req: IRequest, res: Response) => {
+export const reactivateUser = async (req: IRequest, res: Response) => {
     /**
      * Reactivates previously deactivated/ banned accounts. Artifacts are left untempered.
      */
@@ -232,7 +233,7 @@ export const reactiveUser = async (req: IRequest, res: Response) => {
     const user = await mongoose.model(String(schema)).findOne({ deleted: true, active: false, _id: userID })
     if (!user) { throw new NotFoundError(`${schema} does not exist`) }
     user.deleted = false
-    user.active = true
+    user.active = false
     user.deleted = null
     await user.save()
     return res.status(StatusCodes.OK).json({ message: `${schema} has been revived`, result: user, success: true })
@@ -280,7 +281,7 @@ export const updateAUser = async (req: IRequest, res: Response) => {
 
     const user = await mongoose.model(`${schema}`).findOne({ _id: userID })
     if (!user) {
-        throw new NotFoundError("User not found")
+        throw new NotFoundError("User not found" + schema + userID)
     }
     //
     //AVOID UNPRIVILEGED UPDATES
@@ -314,7 +315,9 @@ export const updateAUser = async (req: IRequest, res: Response) => {
         user[key] = userData[key]
     }))
     await user.save()
-    await user.populate(["account", "nextOfKin"])
+    if (schema !== USER_STAFF) {
+        await user.populate(["account", "nextOfKin"])
+    }
 
     return res.status(StatusCodes.OK).json({ message: `${schema} updated`, result: user, success: true })
 }
@@ -347,21 +350,24 @@ export const downloadAcceptanceOrClearance = async (req: IRequest, res: Response
         const { callUpNumber, fullName, gender, courseOfStudy, stateCode } = user
         const data = { callUpNumber, fullName, gender, courseOfStudy, stateCode }
         const template = docType === ACCEPTANCE ? "acceptance-letter.docx" : "final-clearance-nysc.docx"
-        const parsedFileBuffer = formatTemplate(template, data)
+        const parsedFileBuffer = await formatTemplate(template, data)
         var readStream = new stream.PassThrough();
         readStream.end(parsedFileBuffer);
-        res.set('Content-disposition', 'attachment; filename=' + docType + " - " + stateCode);
+        const formattedStateCode = generateSlug(docType + "-" + stateCode)
+
+        res.set('Content-disposition', `attachment; filename=${formattedStateCode}.docx`);
         res.set('Content-Type', 'text/plain');
         readStream.pipe(res);
-        console.log("Done formatting and sending response!")
+        console.log("Done formatting and sending response!", `attachment; filename=${formattedStateCode}.docx`)
     }
-
-
 }
 
 export const uploadDocs = async (req: IRequest, res: Response) => {
     const { userID, schema } = req.body
     const docs = req.files?.docs as UploadedFile | UploadedFile[]
+    if (!docs) {
+        throw new BadRequestError("docs are missing")
+    }
     if (!userID) {
         throw new BadRequestError("userID is missing")
     }
@@ -370,6 +376,25 @@ export const uploadDocs = async (req: IRequest, res: Response) => {
         throw new BadRequestError("Invalid option in schema")
     }
     const docsArray = docs instanceof Array ? docs : [docs]
-    const uploadedDocs = await saveFileToServer(["source", "static"], docsArray, userID, schema)
+    const uploadedDocs = await saveFileToServer(["static"], docsArray, userID, schema)
     res.status(StatusCodes.OK).json({ message: "Upload complete", result: uploadedDocs, success: true })
+}
+
+export const downloadDocs = async (req: IRequest, res: Response) => {
+    const { userID, docID, userSchema } = req.body
+    if (!userID) {
+        throw new BadRequestError("userID is missing")
+    }
+    if (!docID) {
+        throw new BadRequestError("docID is missing")
+    }
+    if (!userSchema) {
+        throw new BadRequestError("userSchema is missing")
+    }
+
+    const docs = await Documents.findOne({ user: userID, userSchema, _id: docID })
+    if (!docs) {
+        throw new NotFoundError("Document not found")
+    }
+
 }
