@@ -4,7 +4,6 @@ import path from "path"
 import fs from "fs"
 import { promisify } from "util"
 import { UploadedFile } from "express-fileupload"
-import url from "url"
 import { IDocument } from "models"
 import { Documents } from "../models"
 export const getReadableDate = function () {
@@ -49,11 +48,10 @@ export const saveFileToServer = async (parentPaths: string[], files: UploadedFil
     const newDocs: IDocument[] = []
     const parentDir = path.resolve(__basedir, ...parentPaths, userSchema, user)
     for await (const file of files) {
-        const name = path.parse(file.name)
-        const slug: string = generateSlug(name.name)
-        file.name = slug + name.ext
-        console.log(file.name)
-        await file.mv(parentDir)
+        const parsedFinalName = path.parse(file.name)
+        const slug: string = generateSlug(parsedFinalName.name)
+        const filePath: string = path.resolve(parentDir, slug + parsedFinalName.ext)
+        await file.mv(filePath)
         let docs: IDocument = { slug, link: path.resolve(parentDir, file.name), userSchema, user }
         newDocs.push(docs)
     }

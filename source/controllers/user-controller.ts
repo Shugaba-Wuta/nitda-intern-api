@@ -10,7 +10,7 @@ import Mailer from "../mailing/mailer";
 import { formatTemplate, generateSlug, saveFileToServer } from "../utils/generic-utils";
 import stream from "stream"
 import { UploadedFile } from "express-fileupload";
-import path from "path"
+import fs from "fs"
 
 
 export const createAUser = async (req: IRequest, res: Response) => {
@@ -363,6 +363,12 @@ export const downloadAcceptanceOrClearance = async (req: IRequest, res: Response
 }
 
 export const uploadDocs = async (req: IRequest, res: Response) => {
+    /**
+    *Uploads and stores multiple/single documents on the server.
+
+    * Due to issues in express-fileupload, the file extensions must not be more than 3 letters.
+
+    */
     const { userID, schema } = req.body
     const docs = req.files?.docs as UploadedFile | UploadedFile[]
     if (!docs) {
@@ -376,12 +382,16 @@ export const uploadDocs = async (req: IRequest, res: Response) => {
         throw new BadRequestError("Invalid option in schema")
     }
     const docsArray = docs instanceof Array ? docs : [docs]
-    const uploadedDocs = await saveFileToServer(["static"], docsArray, userID, schema)
+    const uploadedDocs = await saveFileToServer(["static", "public"], docsArray, userID, schema)
     res.status(StatusCodes.OK).json({ message: "Upload complete", result: uploadedDocs, success: true })
 }
 
 export const downloadDocs = async (req: IRequest, res: Response) => {
-    const { userID, docID, userSchema } = req.body
+    /*
+    *Downloads a document given the required params.
+    */
+    const { userID, schema: userSchema } = req.body
+    const { docID } = req.params
     if (!userID) {
         throw new BadRequestError("userID is missing")
     }
@@ -396,5 +406,9 @@ export const downloadDocs = async (req: IRequest, res: Response) => {
     if (!docs) {
         throw new NotFoundError("Document not found")
     }
-
+    const fileExists = fs.existsSync(docs.link)
+    if (!fileExists) {
+        throw new NotFoundError("DOcument not found")
+    }
+    res.status(StatusCodes.OK).download(docs.link)
 }
