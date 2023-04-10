@@ -358,7 +358,6 @@ export const downloadAcceptanceOrClearance = async (req: IRequest, res: Response
         res.set('Content-disposition', `attachment; filename=${formattedStateCode}.docx`);
         res.set('Content-Type', 'text/plain');
         readStream.pipe(res);
-        console.log("Done formatting and sending response!", `attachment; filename=${formattedStateCode}.docx`)
     }
 }
 
