@@ -1,6 +1,8 @@
 import { Nysc, Siwes, Staff, Intern } from "../models"
 import { INysc, ISiwes, IStaff, IIntern } from "models"
-import { Types } from "mongoose"
+import { Types, Model, Document } from "mongoose"
+
+
 export const getAnyUser = async (deleted: boolean = false, active: boolean = true, email: string, userID: string | Types.ObjectId) => {
     interface IQueryParams {
         email?: string,
@@ -24,4 +26,22 @@ export const getAnyUser = async (deleted: boolean = false, active: boolean = tru
 
     const user: INysc | ISiwes | IStaff | IIntern | null = staff || nysc || siwes || intern
     return user
+}
+
+export const getAllInternsOnPayroll = async (options?: { populateFields: string[] }) => {
+    /***
+     * Queries for interns on the payroll
+     */
+    const nyscOnPayroll = await Nysc.find({ deleted: false, active: true, onPayroll: true })
+    const siwesOnPayroll = await Siwes.find({ deleted: false, active: true, onPayroll: true })
+    const internsOnPayroll = await Intern.find({ deleted: false, active: true, onPayroll: true })
+
+    const allUser = [...nyscOnPayroll, ...siwesOnPayroll, ...internsOnPayroll]
+
+    if (options?.populateFields) {
+        for await (const intern of allUser) {
+            if (intern && options.populateFields) { await intern.populate(options.populateFields) }
+        }
+    }
+    return allUser
 }

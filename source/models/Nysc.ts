@@ -16,4 +16,4 @@ const nyscSchema = new Schema<INysc, NyscModel>({
 
 })
 
-export default model("Nysc", nyscSchema.add(internBase))
+export default model<INysc, NyscModel>("Nysc", nyscSchema.add(internBase))

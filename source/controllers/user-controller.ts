@@ -234,7 +234,7 @@ export const reactivateUser = async (req: IRequest, res: Response) => {
     if (!user) { throw new NotFoundError(`${schema} does not exist`) }
     user.deleted = false
     user.active = false
-    user.deleted = null
+    user.deletedOn = null
     await user.save()
     return res.status(StatusCodes.OK).json({ message: `${schema} has been revived`, result: user, success: true })
 }

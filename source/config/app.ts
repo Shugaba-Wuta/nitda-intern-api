@@ -21,6 +21,7 @@ import { connectDB } from '../db/connect'
 import { attachUserToRequest } from '../middleware/auth'
 import authRouter from "../routers/auth-route"
 import userRouter from "../routers/user-route"
+import payrollRouter from "../routers/payroll-route"
 import { MAX_FILE_UPLOAD_IN_MB } from "./data"
 
 const app = express()
@@ -60,6 +61,7 @@ app.use(fileUpload({
 
 //Authenticated paths
 app.use("/api/users", userRouter)
+app.use("/api/payroll", payrollRouter)
 app.use(notFoundMiddleware)
 
 

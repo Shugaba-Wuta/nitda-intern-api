@@ -1,10 +1,10 @@
-import mongoose from "mongoose"
+import mongoose, { Model } from "mongoose"
 import { userBaseSchema, } from "./userBaseSchema"
 import { GENDERS, QUALIFICATION, INTERNSHIP_STATUS } from "../config/data"
 import { IInternBase } from "models"
 
 
-const internBaseSchema = new mongoose.Schema<IInternBase>({
+const internBaseSchema = new mongoose.Schema<IInternBase, Model<IInternBase>>({
     highestQualification: { type: String, required: [true, "highestQualification is required"], enum: { values: QUALIFICATION, message: `highestQualification must be any of: ${QUALIFICATION}` } },
     gender: { type: String, required: [true, "gender is required"], enum: { values: GENDERS, message: `gender must be any of: ${GENDERS}` } },
     phoneNumber: { type: String, required: [true, "phoneNumber is required"] },
@@ -13,6 +13,7 @@ const internBaseSchema = new mongoose.Schema<IInternBase>({
     expectedEndDate: { type: Date, required: [true, "expectedEndDate is required"] },
     startDate: { type: Date, default: Date.now },
     onPayroll: { type: Boolean, default: false },
+    dateAddedOnPayroll: { type: Date },
     schoolOfStudy: { type: String, required: [true, "schoolOfStudy is required"] },
     courseOfStudy: { type: String, required: [true, "courseOfStudy is required"] },
 })
@@ -26,7 +27,11 @@ internBaseSchema.virtual("duration").get(function () {
     const diffInMilliSeconds: number = startDate - expectedEndDate
     return diffInMilliSeconds
 })
-
+internBaseSchema.pre("save", async function () {
+    if (this.isModified("onPayroll")) {
+        this.dateAddedOnPayroll = new Date()
+    }
+})
 internBaseSchema.virtual("account", {
     ref: "Account",
     foreignField: "intern",
